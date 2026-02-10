@@ -58,6 +58,8 @@ CREATE TABLE alunos (
     status_financeiro ENUM('Em dia', 'Inadimplente', 'Bolsista') DEFAULT 'Em dia',
     ativo BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (pessoa_id) REFERENCES pessoas(id) ON DELETE CASCADE
+    FOREIGN KEY (escola_id) REFERENCES escolas(id) ON DELETE CASCADE
+
 );
 
 -- 1.3 Professores
@@ -70,6 +72,7 @@ CREATE TABLE professores (
     data_contratacao DATE,
     ativo BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (pessoa_id) REFERENCES pessoas(id) ON DELETE CASCADE
+    FOREIGN KEY (escola_id) REFERENCES escolas(id) ON DELETE CASCADE
 );
 
 -- 1.4 Usuários (Login)
@@ -118,6 +121,14 @@ CREATE TABLE turmas (
     data_fim DATE,
     ativa BOOLEAN DEFAULT TRUE,
     FOREIGN KEY (curso_id) REFERENCES cursos(id)
+);
+
+-- 2.4 Escolas
+CREATE TABLE escolas (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    nome VARCHAR(100) NOT NULL,
+    endereco VARCHAR(100) NOT NULL,
+    cep VARCHAR(8) NOT NULL -- futuramente pode por um campo com uma busca automática de endereço
 );
 
 -- =======================================================
