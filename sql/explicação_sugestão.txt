@@ -1,0 +1,46 @@
+Guia Técnico-Visual: Do Banco para a Tela
+1. Tabela: escolas
+No Banco: Centraliza os dados da unidade escolar.
+
+Na Tela (Dashboard Master): Será um Card ou uma Linha em uma Tabela. Ao clicar na escola, o sistema "filtra" todo o resto (alunos, turmas, professores) para aquela unidade específica.
+
+2. Tabela: usuarios
+No Banco: Controla login e nível de acesso.
+
+Na Tela (Login/Perfil): Define o que aparece na Sidebar (Menu Lateral). Se o perfil for "Coordenacao" e tiver um escola_id, ela só enxerga os dados daquela escola. Se for "Professor", o sistema já redireciona para as turmas dele.
+
+3. Tabela: disciplinas
+No Banco: Catálogo fixo baseado na lista da Secretaria.
+
+Na Tela (Cadastro de Turma): Aparece como um Select (Dropdown) ou Checkbox. Ao criar uma turma de "Anos Finais", o sistema filtra e mostra apenas as matérias desse nível para o usuário selecionar.
+
+4. Tabela: turmas
+No Banco: Define a série, o ano letivo e o nível.
+
+Na Tela (Cockpit da Secretaria): Funciona como a Pasta da Turma. Ao entrar nela, você vê a lista de alunos (tabela matriculas) e a grade de horários (tabela turma_disciplinas).
+
+5. Tabela: planejamentos
+No Banco: Guarda o diário de classe com campos dinâmicos por nível.
+
+Na Tela (Diário do Professor): É um Formulário Inteligente.
+
+Se a turma for Infantil, o React esconde os campos de "Notas" e mostra os de "Vivência".
+
+Se for Fundamental, mostra campos de "Unidade Temática" e "Atividades para Casa".
++1
+
+6. Tabela: frequencias
+No Banco: Registra presença/falta vinculada a uma aula.
+
+Na Tela (Chamada): É aquela Lista de Alunos com botões de rádio (P/F/J) ao lado de cada nome. O professor marca e o sistema salva em massa (bulk insert).
+
+7. Tabela: avaliacoes_desempenho
+No Banco: Unifica Notas, Conceitos e Pareceres.
+
+Na Tela (Boletim/Parecer):
+
+Para Anos Finais, é uma tabela de notas de 0 a 10.
+
+Para Infantil e 1º/2º Anos, abre um Campo de Texto Grande (Textarea) para o professor digitar o Parecer Descritivo e selecionar o Conceito (A, B, C ou Construído/Não Construído).
+
+-- O segredo do sistema está no nivel_ensino. É essa coluna que vai dizer para o Back-end quais campos de planejamento ele deve validar e para o Front-end quais componentes ele deve renderizar.
