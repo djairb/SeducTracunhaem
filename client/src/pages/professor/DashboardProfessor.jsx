@@ -1,108 +1,85 @@
-import React, { useState, useEffect } from 'react';
-import { BookOpen, Calendar, Users, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { apiService } from '../../services/api';
+import { MOCK_DATA } from '../../mocks/data';
+import { BookOpen, Users, ClipboardCheck, Award } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-// Removi a importação da Logo daqui, pois já está no App.jsx
-
-export default function DashboardProfessor() {
-  const { user } = useAuth();
-  const [turmas, setTurmas] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (user && user.professorId) {
-      carregarMinhasTurmas(user.professorId);
-    } else {
-      setLoading(false);
-    }
-  }, [user]);
-
-  const carregarMinhasTurmas = async (idProf) => {
-    try {
-      const resTurmas = await apiService.getTurmasProfessor(idProf);
-      setTurmas(resTurmas);
-    } catch (error) {
-      console.error("Erro ao buscar turmas:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64 text-seduc-primary gap-2">
-        <div className="w-4 h-4 bg-seduc-primary rounded-full animate-bounce"></div>
-        Carregando seus diários...
-      </div>
-    );
-  }
+const DashboardProfessor = () => {
+  const { user, getTurmasVinculadas } = useAuth();
+  const turmas = getTurmasVinculadas(); // Busca turmas do nível específico (Infantil, Iniciais ou Finais)
 
   return (
-    <div className="max-w-6xl mx-auto">
-
-      {/* Título da Página (Já que o Header principal fica no topo) */}
-      <div className="mb-8 border-b border-gray-200 pb-4">
-        <h2 className="text-2xl font-bold text-seduc-primary">Minhas Turmas Ativas</h2>
-        <p className="text-gray-500">Selecione uma disciplina para gerenciar aulas, frequências e conteúdos.</p>
-      </div>
-
-      {/* --- LISTAGEM DE TURMAS --- */}
-      {turmas.length === 0 ? (
-        <div className="bg-white p-12 rounded-xl text-center border-2 border-dashed border-gray-200 text-gray-400">
-          <BookOpen size={48} className="mx-auto mb-4 opacity-20 text-seduc-primary" />
-          <p className="text-lg font-medium text-gray-600">Nenhuma turma encontrada.</p>
-          <p className="text-sm mt-2">Você ainda não possui aulas atribuídas.</p>
+    <div className="space-y-6">
+      {/* Header de Boas-vindas */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 uppercase">
+            Minhas Turmas <span className="text-primary">- {user?.nivel_ensino}</span>
+          </h1>
+          <p className="text-slate-500">Selecione uma turma para gerenciar diários e avaliações.</p>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {turmas.map(t => (
-            <div key={t.alocacao_id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group cursor-default">
+      </header>
 
-              {/* Faixa Colorida */}
-              <div className="bg-seduc-primary h-2 w-full group-hover:bg-green-700 transition-colors duration-300" />
+      {/* Grid de Turmas */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {turmas.map((turma) => (
+          <motion.div 
+            key={turma.id}
+            whileHover={{ y: -5 }}
+            className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+          >
+            <div className="p-5 border-b border-slate-100 bg-slate-50">
+              <span className="inline-block px-2 py-1 bg-primary/10 text-primary text-[10px] font-bold rounded mb-2 uppercase">
+                {turma.turno}
+              </span>
+              <h3 className="text-lg font-bold text-slate-800 uppercase leading-tight">
+                {turma.nome}
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 uppercase font-medium">
+                {turma.nome_curso}
+              </p>
+            </div>
 
-              <div className="p-6">
-                <span className="text-xs font-bold text-seduc-primary bg-blue-50 px-2 py-1 rounded uppercase tracking-wide border border-blue-100">
-                  {t.codigo}
-                </span>
+            <div className="p-5 space-y-4">
+              <div className="flex items-center justify-between text-sm text-slate-600">
+                <span className="flex items-center gap-2"><Users size={16}/> Alunos:</span>
+                <span className="font-bold">{turma.total_alunos}</span>
+              </div>
 
-                <h3 className="text-xl font-bold text-gray-800 mt-4 mb-1 line-clamp-2 min-h-[3.5rem]" title={t.nome_disciplina}>
-                  {t.nome_disciplina}
-                </h3>
-                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">{t.nome_escola}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {/* Botão Diário - Link para o diário funcional */}
+                <button className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-primary hover:bg-primary/5 transition-all group">
+                  <ClipboardCheck className="text-slate-400 group-hover:text-primary mb-1" size={20}/>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase">Diário</span>
+                </button>
 
-                <p className="text-sm text-gray-500 mb-6 line-clamp-1 border-b border-gray-50 pb-4">
-                  {t.nome_curso}
-                </p>
-
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <div className="p-1.5 bg-seduc-primary/10 rounded-lg text-seduc-primary">
-                      <Calendar size={16} />
-                    </div>
-                    <span className="font-medium">{t.periodo} • {t.turno}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-600">
-                    <div className="p-1.5 bg-seduc-primary/10 rounded-lg text-seduc-primary">
-                      <Users size={16} />
-                    </div>
-                    <span className="font-medium">{t.total_alunos} alunos matriculados</span>
-                  </div>
-                </div>
-
-                <Link
-                  to={`/professor/diario/${t.alocacao_id}`}
-                  className="w-full bg-seduc-primary text-white font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 hover:bg-white hover:text-seduc-primary border border-transparent hover:border-seduc-primary transition-all"
-                >
-                  Abrir Diário <ArrowRight size={18} />
-                </Link>
+                {/* Botão Avaliação - Link para notas/conceitos */}
+                <button className="flex flex-col items-center justify-center p-3 rounded-xl border border-slate-200 hover:border-primary hover:bg-primary/5 transition-all group">
+                  <Award className="text-slate-400 group-hover:text-primary mb-1" size={20}/>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase">Avaliar</span>
+                </button>
               </div>
             </div>
-          ))}
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Informativo BNCC Lateral (Opcional) */}
+      <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl flex items-start gap-4">
+        <div className="p-2 bg-primary rounded-lg text-white">
+          <BookOpen size={20}/>
         </div>
-      )}
+        <div>
+          <h4 className="text-sm font-bold text-primary uppercase">Lembrete Pedagógico</h4>
+          <p className="text-xs text-slate-600 mt-1">
+            {user?.nivel_ensino === 'Infantil' 
+              ? 'Não esqueça de preencher o registro de vivências e objetivos de aprendizagem mensais.' 
+              : 'As notas do 1º bimestre devem ser lançadas conforme o calendário escolar.'}
+          </p>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default DashboardProfessor;

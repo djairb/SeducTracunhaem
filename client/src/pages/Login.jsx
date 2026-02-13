@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, 
@@ -8,8 +9,11 @@ import {
   ArrowRight 
 } from 'lucide-react';
 import logo from '../img/seduc-logo2.jpg';
+import { useAuth } from '../contexts/AuthContext';
 
 const Login = ({ onLogin }) => {
+
+    const { signIn } = useAuth();
   const perfis = [
     { 
       id: 'master', 
@@ -70,7 +74,7 @@ const Login = ({ onLogin }) => {
             transition={{ delay: index * 0.1 }}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => onLogin(perfil.id)}
+            onClick={() => signIn(perfil.id)}
             className="group relative p-5 bg-white rounded-2xl shadow-sm border border-slate-200 hover:border-primary hover:shadow-md transition-all duration-300 text-left flex items-center"
           >
             <div className={`p-4 rounded-xl mr-5 transition-colors ${perfil.color} group-hover:bg-primary group-hover:text-white`}>
