@@ -3,9 +3,11 @@ import { GraduationCap, Plus, Calendar, Clock, Users, Trash2, ArrowRight, X } fr
 import { Link } from 'react-router-dom';
 
 import { apiService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { useForm } from 'react-hook-form';
 
 export default function ListaTurmas() {
+  const { globalSchoolId } = useAuth(); // Pegar ID da Escola
   const [turmas, setTurmas] = useState([]);
   const [cursos, setCursos] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,12 +33,13 @@ export default function ListaTurmas() {
 
   useEffect(() => {
     carregarDados();
-  }, []);
+  }, [globalSchoolId]); // Recarregar quando mudar a escola
 
   const carregarDados = async () => {
+    setLoading(true); // Mostrar loading ao trocar
     try {
       const [resTurmas, resCursos] = await Promise.all([
-        apiService.getTurmas(),
+        apiService.getTurmas(globalSchoolId), // Filtro global
         apiService.getCursos()
       ]);
       setTurmas(resTurmas);

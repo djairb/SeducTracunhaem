@@ -4,7 +4,10 @@ import { Link } from 'react-router-dom';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { apiService } from '../services/api';
 
+import { useAuth } from '../contexts/AuthContext'; // Importar Contexto
+
 export default function Dashboard() {
+    const { globalSchoolId } = useAuth(); // Pegar ID da Escola
     const [dados, setDados] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -14,11 +17,12 @@ export default function Dashboard() {
 
     useEffect(() => {
         carregarDados();
-    }, []);
+    }, [globalSchoolId]); // Recarregar quando mudar a escola
 
     const carregarDados = async () => {
+        setLoading(true); // Mostrar loading ao trocar
         try {
-            const dadosMock = await apiService.getDashboardStats();
+            const dadosMock = await apiService.getDashboardStats(globalSchoolId);
             setDados(dadosMock);
         } catch (error) {
             console.error("Erro dashboard:", error);

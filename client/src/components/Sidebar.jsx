@@ -1,13 +1,21 @@
 import React from 'react';
+import { useLocation, Link } from 'react-router-dom';
 import { LayoutDashboard, UserPlus, Users, GraduationCap, LogOut, X, Briefcase, Book, BookOpen, BarChart3 } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
-import logoSeduc from '../img/seduc-logo2.jpg'; // <--- Importando a logo
-
 import { useAuth } from '../contexts/AuthContext';
+import { apiService } from '../services/api';
+import logoSeduc from '../img/seduc-logo2.jpg';
 
 export default function Sidebar({ onLogout, user, isOpen, onClose }) {
-  const { alternarPerfil } = useAuth();
+  const { alternarPerfil, globalSchoolId, setGlobalSchoolId } = useAuth();
   const location = useLocation();
+  const [escolas, setEscolas] = React.useState([]);
+
+  React.useEffect(() => {
+    // Carrega escolas para o seletor (Apenas se for Master/Secretaria)
+    if (user?.perfil === 'Master' || !user?.professorId) {
+      apiService.getEscolas().then(setEscolas);
+    }
+  }, [user]);
 
   // --- MENU ITEMS DINÂMICOS PELO PERFIL ---
   let menuItems = [];
@@ -77,7 +85,7 @@ export default function Sidebar({ onLogout, user, isOpen, onClose }) {
 
 
         {/* --- INFO DO USUÁRIO (SAUDAÇÃO) --- */}
-        <div className="px-6 py-8 border-b border-white/5 bg-white/5">
+        <div className="px-6 py-6 border-b border-white/5 bg-white/5">
           <p className="text-sm text-seduc-secondary font-medium mb-1">
             Bem-vindo(a),
           </p>
@@ -86,9 +94,26 @@ export default function Sidebar({ onLogout, user, isOpen, onClose }) {
             {user?.nome || 'Usuário'}
           </p>
 
-          <p className="text-sm text-gray-200 capitalize mt-1 opacity-80">
+          <p className="text-sm text-gray-200 capitalize mt-1 opacity-80 mb-4">
             {user?.perfil || 'Visitante'}
           </p>
+
+          {/* SELETOR DE ESCOLA (GLOBAL) */}
+          {(user?.perfil === 'Master' || !user?.professorId) && (
+            <div className="mt-2">
+              <label className="text-[10px] uppercase text-gray-400 font-bold tracking-wider mb-1 block">Contexto da Rede:</label>
+              <select
+                value={globalSchoolId}
+                onChange={(e) => setGlobalSchoolId(e.target.value)}
+                className="w-full bg-white/10 text-white text-sm border border-white/20 rounded-lg p-2 focus:ring-2 focus:ring-seduc-secondary outline-none child:text-gray-900"
+              >
+                <option value="">Todas as Escolas</option>
+                {escolas.map(e => (
+                  <option key={e.id} value={e.id}>{e.nome}</option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
 

@@ -14,6 +14,9 @@ export function AuthProvider({ children }) {
   });
   const [loading, setLoading] = useState(false);
 
+  // --- FILTRO GLOBAL DE ESCOLA (SECRETARIA) ---
+  const [globalSchoolId, setGlobalSchoolId] = useState(''); // '' = Todas
+
   // Efeito removido pois já iniciamos logado
   useEffect(() => {
     setLoading(false);
@@ -78,7 +81,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ signed: !!user, user, loading, signIn, signOut, alternarPerfil }}>
+    <AuthContext.Provider value={{ signed: !!user, user, loading, signIn, signOut, alternarPerfil, globalSchoolId, setGlobalSchoolId }}>
       {children}
     </AuthContext.Provider>
   );

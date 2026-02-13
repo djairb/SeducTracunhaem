@@ -31,11 +31,18 @@ export const apiService = {
         return MOCK_DATA.disciplinasPadrao.filter(d => d.nivel === nivel);
     },
 
-    getAlunos: async (turmaId) => {
+    getAlunos: async (turmaId, escolaId) => {
         await simulateDelay();
         let lista = MOCK_DATA.alunos;
+
+        // Filtro por Turma Específica
         if (turmaId) {
             lista = lista.filter(a => a.turma_id === Number(turmaId));
+        }
+        // Filtro por Escola (se não houver turma específica)
+        else if (escolaId) {
+            const turmasEscola = MOCK_DATA.turmas.filter(t => t.escola_id === Number(escolaId)).map(t => t.id);
+            lista = lista.filter(a => turmasEscola.includes(a.turma_id));
         }
 
         // Mapeia para o formato esperado pela ListaAlunos e GerenciarTurma
@@ -95,14 +102,26 @@ export const apiService = {
         return { erro: true };
     },
 
-    getDashboardStats: async () => {
+    getDashboardStats: async (escolaId) => {
         await simulateDelay(1000);
+
+        let alunos = MOCK_DATA.alunos;
+        let turmas = MOCK_DATA.turmas;
+
+        if (escolaId) {
+            turmas = turmas.filter(t => t.escola_id === Number(escolaId));
+            alunos = alunos.filter(a => {
+                const turma = MOCK_DATA.turmas.find(t => t.id === a.turma_id);
+                return turma && turma.escola_id === Number(escolaId);
+            });
+        }
+
         return {
             cards: {
-                total_alunos: MOCK_DATA.alunos.length,
-                total_turmas: MOCK_DATA.turmas.length,
-                total_professores: 18, // Mock fixo
-                total_aulas: 1240 // Mock fixo
+                total_alunos: alunos.length,
+                total_turmas: turmas.length,
+                total_professores: escolaId ? 6 : 18, // Mock aproximado
+                total_aulas: escolaId ? 420 : 1240 // Mock aproximado
             },
             graficos: {
                 status: [
@@ -110,19 +129,19 @@ export const apiService = {
                     { name: 'Ausente', value: 15, fill: '#ef4444' },
                     { name: 'Justificado', value: 10, fill: '#f97316' }
                 ],
-                turmas: MOCK_DATA.turmas.map(t => ({
+                turmas: turmas.map(t => ({
                     name: t.nome,
                     percentual: Math.floor(Math.random() * (95 - 70 + 1) + 70) // Random entre 70 e 95
                 })),
                 sexo: [
-                    { name: 'Masculino', value: 45 },
-                    { name: 'Feminino', value: 55 }
+                    { name: 'Masculino', value: Math.floor(alunos.length * 0.45) },
+                    { name: 'Feminino', value: Math.floor(alunos.length * 0.55) }
                 ],
                 idade: [
-                    { name: '6 Anos', alunos: 12 },
-                    { name: '7 Anos', alunos: 15 },
-                    { name: '8 Anos', alunos: 10 },
-                    { name: '9 Anos', alunos: 18 }
+                    { name: '6 Anos', alunos: Math.floor(alunos.length * 0.2) },
+                    { name: '7 Anos', alunos: Math.floor(alunos.length * 0.3) },
+                    { name: '8 Anos', alunos: Math.floor(alunos.length * 0.2) },
+                    { name: '9 Anos', alunos: Math.floor(alunos.length * 0.3) }
                 ]
             }
         };
@@ -183,13 +202,19 @@ export const apiService = {
     },
 
     // --- MOCKS PARA LISTA DE PROFESSORES ---
-    getProfessores: async () => {
+    getProfessores: async (escolaId) => {
         await simulateDelay();
-        return [
-            { id: 1, nome_completo: "Maria Silva", cpf: "111.111.111-11", telefone_celular: "(81) 98888-8888", conselho_tipo: "MEC", conselho_numero: "12345", conselho_uf: "PE", ativo: true, data_contratacao: "2023-01-15" },
-            { id: 2, nome_completo: "João Santos", cpf: "222.222.222-22", telefone_celular: "(81) 97777-7777", conselho_tipo: "MEC", conselho_numero: "54321", conselho_uf: "PE", ativo: true, data_contratacao: "2022-03-10" },
-            { id: 3, nome_completo: "Ana Costa", cpf: "333.333.333-33", telefone_celular: "(81) 96666-6666", conselho_tipo: "MEC", conselho_numero: "98765", conselho_uf: "PE", ativo: false, data_contratacao: "2021-05-20" }
+        let lista = [
+            { id: 1, nome_completo: "Maria Silva", cpf: "111.111.111-11", telefone_celular: "(81) 98888-8888", matricula: "1001", vinculo: "Concursado", carga_horaria: "200h", area_atuacao: "Matemática", ativo: true, data_contratacao: "2023-01-15", escola_id: 1 }, // Escola 1
+            { id: 2, nome_completo: "João Santos", cpf: "222.222.222-22", telefone_celular: "(81) 97777-7777", matricula: "1002", vinculo: "Contrato Temporário", carga_horaria: "150h", area_atuacao: "História", ativo: true, data_contratacao: "2022-03-10", escola_id: 2 }, // Escola 2
+            { id: 3, nome_completo: "Ana Costa", cpf: "333.333.333-33", telefone_celular: "(81) 96666-6666", matricula: "1003", vinculo: "Comissionado", carga_horaria: "100h", area_atuacao: "Polivalente", ativo: false, data_contratacao: "2021-05-20", escola_id: 3 } // Escola 3
         ];
+
+        if (escolaId) {
+            lista = lista.filter(p => p.escola_id === Number(escolaId));
+        }
+
+        return lista;
     },
 
     deleteProfessor: async (id) => {
@@ -209,9 +234,10 @@ export const apiService = {
             telefone_celular: "(81) 98888-8888",
             email: "maria@email.com",
             escolaridade: "Superior Completo",
-            conselho_tipo: "MEC",
-            conselho_numero: "12345",
-            conselho_uf: "PE",
+            matricula: "1001",
+            vinculo: "Concursado",
+            carga_horaria: "200h",
+            area_atuacao: "Matemática",
             cep: "50000-000",
             endereco: "Rua das Flores",
             numero: "123",

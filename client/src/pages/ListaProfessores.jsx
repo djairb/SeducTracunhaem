@@ -3,8 +3,10 @@ import { Search, UserPlus, Edit2, Trash2, User, Phone, Briefcase, FileText, Chev
 import { Link } from 'react-router-dom';
 
 import { apiService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext'; // Importar Contexto
 
 export default function ListaProfessores() {
+  const { globalSchoolId } = useAuth(); // Pegar ID da Escola
   const [professores, setProfessores] = useState([]);
   const [busca, setBusca] = useState('');
   const [loading, setLoading] = useState(true);
@@ -19,11 +21,12 @@ export default function ListaProfessores() {
 
   useEffect(() => {
     carregarProfessores();
-  }, []);
+  }, [globalSchoolId]); // Recarregar quando mudar a escola
 
   const carregarProfessores = async () => {
+    setLoading(true); // Mostrar loading ao trocar
     try {
-      const data = await apiService.getProfessores();
+      const data = await apiService.getProfessores(globalSchoolId); // Filtro global
       setProfessores(data);
     } catch (error) {
       console.error("Erro ao buscar professores:", error);
@@ -139,9 +142,9 @@ export default function ListaProfessores() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-y-3 gap-x-2 text-sm text-gray-600 mt-2 bg-gray-50 p-3 rounded-lg border border-gray-100">
-                  <div className="flex items-center gap-2 col-span-2" title="Registro Profissional">
-                    <FileText size={14} className="text-seduc-primary" />
-                    <span className="font-bold text-gray-700">{prof.conselho_tipo}: {prof.conselho_numero}/{prof.conselho_uf}</span>
+                  <div className="flex items-center gap-2 col-span-2" title="Vínculo e Carga Horária">
+                    <Briefcase size={14} className="text-seduc-primary" />
+                    <span className="font-bold text-gray-700">{prof.vinculo} ({prof.carga_horaria})</span>
                   </div>
                   <div className="flex items-center gap-2 col-span-2"><User size={14} className="text-seduc-primary" /><span>CPF: {prof.cpf}</span></div>
                   <div className="flex items-center gap-2 col-span-2"><Phone size={14} className="text-seduc-primary" /><span>{prof.telefone_celular}</span></div>

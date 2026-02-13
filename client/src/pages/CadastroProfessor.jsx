@@ -25,8 +25,9 @@ export default function CadastroProfessor() {
     defaultValues: {
       sexo: '',
       escolaridade: '',
-      conselho_tipo: '',
-      conselho_uf: ''
+      vinculo: '',
+      carga_horaria: '',
+      area_atuacao: ''
     }
   });
 
@@ -71,7 +72,7 @@ export default function CadastroProfessor() {
   const handleNextStep = async () => {
     let campos = [];
     if (step === 1) campos = ['nome_completo', 'sexo', 'data_nascimento', 'telefone_celular', 'email', 'escolaridade'];
-    if (step === 2) campos = ['cpf', 'conselho_tipo', 'conselho_numero', 'conselho_uf', 'nome_mae'];
+    if (step === 2) campos = ['matricula', 'vinculo', 'carga_horaria', 'area_atuacao', 'cpf', 'nome_mae']; // Atualizado
     if (step === 3) campos = ['numero', 'endereco', 'bairro', 'cidade', 'estado'];
 
     const isValid = await trigger(campos);
@@ -333,60 +334,80 @@ export default function CadastroProfessor() {
               )}
             </h3>
 
-            {/* Bloco de Conselho em Destaque */}
+            {/* Bloco de Vínculo Funcional */}
             <div className="bg-green-50 p-3 sm:p-4 rounded-lg border border-green-100 mb-4">
               <h4 className="font-bold text-seduc-primary text-sm mb-2 sm:mb-3 flex items-center gap-2">
-                <GraduationCap size={14} className="sm:size-[16px]" /> Registro de Classe
+                <GraduationCap size={14} className="sm:size-[16px]" /> Dados Profissionais
               </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+
+                {/* Matrícula */}
                 <div>
-                  <label className="label text-green-900">Tipo de Conselho *</label>
-                  <select
-                    {...register("conselho_tipo", { required: "Tipo de conselho é obrigatório" })}
-                    className={`${getInputClass("conselho_tipo")} border-green-200`}
-                  >
-                    <option value="">Selecione...</option>
-                    <option value="COREN">COREN (Enfermagem)</option>
-                    <option value="CRM">CRM (Medicina)</option>
-                    <option value="CREFITO">CREFITO (Fisio)</option>
-                    <option value="CRP">CRP (Psicologia)</option>
-                    <option value="CRN">CRN (Nutrição)</option>
-                    <option value="LICENCIATURA">Licenciatura</option>
-                    <option value="OUTROS">Outros</option>
-                  </select>
-                  <ErrorMessage error={errors.conselho_tipo} />
-                </div>
-                <div>
-                  <label className="label text-green-900">Número *</label>
+                  <label className="label text-green-900">Matrícula *</label>
                   <input
-                    {...register("conselho_numero", {
-                      required: "Número do conselho é obrigatório",
-                      pattern: {
-                        value: /^\d+$/,
-                        message: "Apenas números"
-                      }
+                    {...register("matricula", {
+                      required: "Matrícula é obrigatória",
+                      minLength: { value: 3, message: "Mínimo 3 dígitos" }
                     })}
-                    className={`${getInputClass("conselho_numero")} border-green-200`}
+                    className={`${getInputClass("matricula")} border-green-200`}
                     placeholder="Ex: 123456"
                   />
-                  <ErrorMessage error={errors.conselho_numero} />
+                  <ErrorMessage error={errors.matricula} />
                 </div>
+
+                {/* Vínculo */}
                 <div>
-                  <label className="label text-green-900">UF *</label>
-
-
-
+                  <label className="label text-green-900">Vínculo *</label>
                   <select
-                    {...register("conselho_uf", { required: "UF do conselho é obrigatória" })}
-                    className={`${getInputClass("conselho_uf")} border-green-200`}
+                    {...register("vinculo", { required: "Selecione o vínculo" })}
+                    className={`${getInputClass("vinculo")} border-green-200`}
                   >
-                    <option value="">UF</option>
-                    {UFS.map(uf => (
-                      <option key={uf} value={uf}>{uf}</option>
-                    ))}
+                    <option value="">Selecione...</option>
+                    <option value="Concursado">Concursado (Efetivo)</option>
+                    <option value="Contrato Temporário">Contrato Temporário</option>
+                    <option value="Comissionado">Comissionado</option>
+                    <option value="Permuta">Permuta</option>
                   </select>
-                  <ErrorMessage error={errors.conselho_uf} />
+                  <ErrorMessage error={errors.vinculo} />
                 </div>
+
+                {/* Carga Horária */}
+                <div>
+                  <label className="label text-green-900">Carga Horária *</label>
+                  <select
+                    {...register("carga_horaria", { required: "Selecione a CH" })}
+                    className={`${getInputClass("carga_horaria")} border-green-200`}
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="100h">100h Mensais</option>
+                    <option value="150h">150h Mensais</option>
+                    <option value="180h">180h Mensais</option>
+                    <option value="200h">200h Mensais</option>
+                  </select>
+                  <ErrorMessage error={errors.carga_horaria} />
+                </div>
+
+                {/* Área de Atuação */}
+                <div>
+                  <label className="label text-green-900">Área de Atuação *</label>
+                  <select
+                    {...register("area_atuacao", { required: "Selecione a área" })}
+                    className={`${getInputClass("area_atuacao")} border-green-200`}
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="Polivalente">Polivalente (Anos Iniciais/Infantil)</option>
+                    <option value="Língua Portuguesa">Língua Portuguesa</option>
+                    <option value="Matemática">Matemática</option>
+                    <option value="Ciências">Ciências</option>
+                    <option value="História">História</option>
+                    <option value="Geografia">Geografia</option>
+                    <option value="Educação Física">Educação Física</option>
+                    <option value="Artes">Artes</option>
+                    <option value="Inglês">Inglês</option>
+                  </select>
+                  <ErrorMessage error={errors.area_atuacao} />
+                </div>
+
               </div>
             </div>
 
@@ -616,8 +637,11 @@ export default function CadastroProfessor() {
                 </button>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
-                <p><strong>Registro:</strong> {allFields.conselho_tipo} {allFields.conselho_numero}/{allFields.conselho_uf}</p>
-                <p><strong>CPF:</strong> {allFields.cpf || 'Não informado'}</p>
+                <p><strong>Matrícula:</strong> {allFields.matricula || '---'}</p>
+                <p><strong>Vínculo:</strong> {allFields.vinculo || '---'}</p>
+                <p><strong>Carga Horária:</strong> {allFields.carga_horaria || '---'}</p>
+                <p><strong>Área de Atuação:</strong> {allFields.area_atuacao || '---'}</p>
+                <p className="border-t pt-2 mt-2 sm:col-span-2"><strong>CPF:</strong> {allFields.cpf || 'Não informado'}</p>
                 <p><strong>RG:</strong> {allFields.rg || 'Não informado'}</p>
                 <p><strong>Data Contratação:</strong> {formatarData(allFields.data_contratacao)}</p>
                 <p className="sm:col-span-2"><strong>Nome da Mãe:</strong> {allFields.nome_mae || 'Não informado'}</p>

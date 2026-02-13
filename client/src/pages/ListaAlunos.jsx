@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Search, UserPlus, Edit2, Trash2, User, Phone, Calendar, Fingerprint, ChevronLeft, ChevronRight, AlertTriangle, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { apiService } from '../services/api';
+import { useAuth } from '../contexts/AuthContext'; // Importar Contexto
 
 export default function ListaAlunos() {
+  const { globalSchoolId } = useAuth(); // Pegar ID da Escola
   const [alunos, setAlunos] = useState([]);
   const [busca, setBusca] = useState('');
   const [loading, setLoading] = useState(true);
@@ -18,11 +20,12 @@ export default function ListaAlunos() {
 
   useEffect(() => {
     carregarAlunos();
-  }, []);
+  }, [globalSchoolId]); // Recarregar quando mudar a escola
 
   const carregarAlunos = async () => {
+    setLoading(true); // Mostrar loading ao trocar
     try {
-      const data = await apiService.getAlunos();
+      const data = await apiService.getAlunos(null, globalSchoolId); // Filtro global
       setAlunos(data);
     } catch (error) {
       console.error("Erro ao buscar alunos:", error);
