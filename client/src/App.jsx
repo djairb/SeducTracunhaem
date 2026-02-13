@@ -40,54 +40,63 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 // =================================================================
 // No seu App.jsx, localize esta parte:
 const MainLayout = ({ children }) => {
-  // ADICIONE escolaIdSelecionada, escolas e selecionarEscola AQUI:
   const { signOut, user, escolaIdSelecionada, escolas, selecionarEscola } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Definimos quem tem permissão para ver o seletor de escolas global
+  const isAdmin = ['Master', 'Coordenacao', 'Secretaria'].includes(user?.perfil);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar
-        user={user}
-        onLogout={signOut}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
+      <Sidebar 
+        user={user} 
+        onLogout={signOut} 
+        isOpen={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
       />
 
       <div className="flex-1 flex flex-col md:ml-64 transition-all duration-300">
         <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <button
+            <button 
               onClick={() => setSidebarOpen(true)}
               className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-
-            {/* DROPDOWN DE SELEÇÃO DE ESCOLA ESTILIZADO */}
-            <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
-              <div className="text-primary">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 21-9-9 9-9" /><path d="M22 12H10" /></svg>
+            
+            {/* O SELETOR SÓ APARECE PARA O ADMINISTRADOR */}
+            {isAdmin ? (
+              <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <select 
+                  value={escolaIdSelecionada || ""}
+                  onChange={(e) => selecionarEscola(e.target.value)}
+                  className="bg-transparent border-none text-[11px] font-black uppercase tracking-tight text-slate-700 focus:ring-0 cursor-pointer min-w-[220px]"
+                >
+                  <option value="">Selecionar Unidade Escolar...</option>
+                  {escolas?.map(e => (
+                    <option key={e.id} value={e.id}>{e.nome}</option>
+                  ))}
+                </select>
               </div>
-              <select
-                value={escolaIdSelecionada || ""}
-                onChange={(e) => selecionarEscola(e.target.value)}
-                className="bg-transparent border-none text-[11px] font-black uppercase tracking-tight text-slate-700 focus:ring-0 cursor-pointer min-w-[220px]"
-              >
-                <option value="">Selecionar Unidade Escolar</option>
-                {escolas?.map(e => (
-                  <option key={e.id} value={e.id} className="font-sans text-sm">{e.nome}</option> //
-                ))}
-              </select>
-            </div>
+            ) : (
+              /* Para o Professor, mostramos apenas um título ou o nome da escola atual dele */
+              <div className="hidden md:block">
+                 <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+                   Ambiente de Lançamentos Docente
+                 </h2>
+              </div>
+            )}
           </div>
-
+          
+          {/* Info do Usuário e Logout (Mantém igual) */}
           <div className="flex items-center gap-4">
             <div className="text-right">
               <p className="text-sm font-bold text-slate-700">{user?.nome}</p>
-              <p className="text-[10px] text-primary uppercase font-bold">{user?.perfil_descricao || user?.perfil}</p>
+              <p className="text-[10px] text-primary uppercase font-bold">{user?.perfil_descricao}</p>
             </div>
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20">
-              {user?.nome?.substring(0, 2).toUpperCase()}
+              {user?.nome?.substring(0,2).toUpperCase()}
             </div>
           </div>
         </header>
@@ -162,7 +171,7 @@ function App() {
         } />
 
         {/* ROTA DO PROFESSOR - FREQUÊNCIA */}
-        <Route path="/professor/frequencia" element={
+        <Route path="/professor/frequencia/:turmaId" element={
           <PrivateRoute allowedRoles={['Professor']}>
             <MainLayout><FolhaFrequencia /></MainLayout>
           </PrivateRoute>

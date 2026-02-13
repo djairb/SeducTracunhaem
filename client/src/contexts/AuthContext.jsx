@@ -52,11 +52,20 @@ const isDiaBloqueado = (data) => {
   const getTurmasPorEscola = () =>
     escolaIdSelecionada ? turmas.filter(t => t.escola_id === escolaIdSelecionada) : [];
 
-  const getAlunosPorEscola = () =>
-    escolaIdSelecionada ? alunos.filter(a => {
-      const turma = turmas.find(t => t.id === a.turma_id);
-      return turma?.escola_id === escolaIdSelecionada;
-    }) : [];
+  const getAlunosPorEscola = () => {
+  // Se for Master, filtra pela escola selecionada no Header
+  if (['Master', 'Coordenacao', 'Secretaria'].includes(user?.perfil)) {
+    return escolaIdSelecionada 
+      ? alunos.filter(a => {
+          const turma = turmas.find(t => t.id === a.turma_id);
+          return turma?.escola_id === escolaIdSelecionada;
+        }) 
+      : [];
+  }
+  
+  // Se for Professor, retorna todos os alunos (o componente FolhaFrequencia filtrará pelo ID da Turma da URL)
+  return alunos;
+};
 
   const getTurmasVinculadas = () => {
     if (!user) return [];

@@ -70,8 +70,8 @@ const DashboardProfessor = () => {
                 {/* BOTÕES DE AÇÃO RÁPIDA (O PONTO CHAVE) */}
                 <div className="grid grid-cols-2 gap-3">
                   <Link
-                    to="/professor/frequencia"
-                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all duration-300 group/btn shadow-sm"
+                    to={`/professor/frequencia/${turma.id}`} // Envia o ID na URL
+                    className="flex flex-col items-center justify-center p-3 rounded-2xl bg-emerald-50 text-emerald-600 hover:bg-emerald-500 hover:text-white transition-all shadow-sm"
                   >
                     <ClipboardCheck size={20} className="mb-1" />
                     <span className="text-[9px] font-black uppercase">Chamada</span>
