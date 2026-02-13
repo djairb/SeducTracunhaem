@@ -16,6 +16,7 @@ export const AuthProvider = ({ children }) => {
   const [professores, setProfessores] = useState(MOCK_DATA.professores);
   const [escolaIdSelecionada, setEscolaIdSelecionada] = useState(null);
   const [frequencias, setFrequencias] = useState([]);
+  const [planejamentos, setPlanejamentos] = useState([]);
 
   // =================================================================
   // 1. EFEITO DE INICIALIZAÇÃO (DESTRAVA A TELA)
@@ -72,6 +73,16 @@ const isDiaBloqueado = (data) => {
     if (user.perfil === 'Master') return turmas;
     return turmas.filter(t => t.nivel_ensino === user.nivel_ensino);
   };
+
+  const salvarPlanejamento = (dados) => {
+  const novoPlan = {
+    ...dados,
+    id: planejamentos.length + 1,
+    dataEnvio: new Date().toISOString(),
+    status: 'Enviado' // Status inicial para a coordenação ver
+  };
+  setPlanejamentos([...planejamentos, novoPlan]);
+};
 
   const salvarPresenca = (data, turmaId, listaPresenca) => {
   // listaPresenca virá como [{alunoId: 1, status: 'P'}, {alunoId: 2, status: 'F'}]
@@ -146,6 +157,12 @@ const desvincularProfessorEscola = (profId, escolaId) => {
     setEscolas([...escolas, nova]);
   };
 
+  const atualizarStatusPlanejamento = (planId, novoStatus, feedback = "") => {
+  setPlanejamentos(prev => prev.map(p => 
+    p.id === planId ? { ...p, status: novoStatus, feedbackCoordenação: feedback } : p
+  ));
+};
+
   // =================================================================
   // 4. AUTENTICAÇÃO
   // =================================================================
@@ -187,7 +204,7 @@ const desvincularProfessorEscola = (profId, escolaId) => {
     desvincularProfessorEscola,
     diasBloqueados, // <--- TEM QUE ESTAR AQUI!
     bloquearDia,
-    isDiaBloqueado
+    isDiaBloqueado, salvarPlanejamento, salvarPresenca, atualizarStatusPlanejamento, planejamentos
     }}>
       {children}
     </AuthContext.Provider>

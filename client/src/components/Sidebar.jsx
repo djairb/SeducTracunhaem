@@ -10,8 +10,12 @@ import {
   X,
   School,
   Calendar,
-  CheckCircle // Importando o ícone de escola
+  CheckCircle,
+  ClipboardCheck, // Importando o ícone de escola
+  FileSpreadsheet,
+  CalendarDays
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const Sidebar = ({ user, onLogout, isOpen, onClose }) => {
   
@@ -24,14 +28,29 @@ const Sidebar = ({ user, onLogout, isOpen, onClose }) => {
     { path: '/professores', label: 'Professores', icon: <GraduationCap size={20} /> },
     { path: '/turmas', label: 'Turmas & Gestão', icon: <BookOpen size={20} /> },
     { path: '/relatorios', label: 'Relatórios', icon: <FileBarChart size={20} /> },
+    { path: '/validar-planejamentos', label: 'Validar Planos', icon: <ClipboardCheck size={20} /> },
+    { path: '/relatorios/ata-resultados', label: 'Ata de Resultados', icon: <FileSpreadsheet size={20} /> },
   ];
 
-  const professorMenuItems = [
-    { path: '/portal-professor', label: 'Minhas Turmas', icon: <LayoutDashboard size={20} /> },
-    { path: '/professor/diario', label: 'Diário de Classe', icon: <BookOpen size={20} /> },
-    { path: '/professor/frequencia', label: 'Frequência (Chamada)', icon: <CheckCircle size={20} /> }, // ADICIONADO
-    { path: '/professor/avaliacao', label: 'Avaliações', icon: <FileBarChart size={20} /> },
-  ];
+ const { getTurmasVinculadas } = useAuth();
+const turmasDocente = getTurmasVinculadas();
+const primeiraTurmaId = turmasDocente[0]?.id || '';
+
+const professorMenuItems = [
+  { path: '/portal-professor', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+  // Agora passamos o ID da primeira turma para evitar o erro de rota
+  { 
+    path: `/professor/frequencia/${primeiraTurmaId}`, 
+    label: 'Frequência (Chamada)', 
+    icon: <CheckCircle size={20} /> 
+  },
+  { 
+    path: `/professor/diario/${primeiraTurmaId}`, 
+    label: 'Diário de Classe', 
+    icon: <BookOpen size={20} /> 
+  },
+  { path: '/professor/avaliacao', label: 'Avaliações', icon: <FileBarChart size={20} /> },
+];
 
   // Escolhe qual menu mostrar baseado no perfil do usuário
   const menuItems = user?.perfil === 'Professor' ? professorMenuItems : adminMenuItems;
@@ -65,24 +84,26 @@ const Sidebar = ({ user, onLogout, isOpen, onClose }) => {
           </div>
 
           {/* Navegação Dinâmica */}
-          <nav className="flex-1 space-y-1 overflow-y-auto pr-2 custom-scrollbar">
-            {menuItems.map((item) => (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                onClick={onClose}
-                className={({ isActive }) => `
-                  flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase transition-all tracking-tight
-                  ${isActive 
-                    ? 'bg-primary/10 text-primary border-r-4 border-primary shadow-sm' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}
-                `}
-              >
-                {item.icon}
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
+<nav className="flex-1 space-y-1 overflow-y-auto pr-2 custom-scrollbar">
+  {menuItems.map((item) => (
+    <NavLink
+      key={item.path}
+      to={item.path}
+      onClick={onClose}
+      // ADICIONE A PROPRIEDADE END AQUI
+      end={item.path === '/relatorios' || item.path === '/'} 
+      className={({ isActive }) => `
+        flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase transition-all tracking-tight
+        ${isActive 
+          ? 'bg-primary/10 text-primary border-r-4 border-primary shadow-sm' 
+          : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}
+      `}
+    >
+      {item.icon}
+      {item.label}
+    </NavLink>
+  ))}
+</nav>
 
           {/* Info Usuário e Logout */}
           <div className="pt-6 border-t border-slate-100 mt-auto">

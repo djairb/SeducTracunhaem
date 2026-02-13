@@ -18,6 +18,12 @@ import ListaAlunos from './pages/ListaAlunos';
 import ListaProfessores from './pages/ListaProfessores';
 import CalendarioEscolar from './pages/CalendarioEscolar';
 import FolhaFrequencia from './pages/professor/FolhaFrequencia';
+import PlanejamentoDocente from './pages/professor/PlanejamentoDocente';
+import ValidarPlanejamentos from './pages/ValidarPlanejamentos';
+import AtaResultados from './pages/AtaResultados';
+import GradeHorarios from './pages/professor/GradeHorarios';
+import GestaoTurmas from './pages/GestaoTurmas';
+import RelatoriosHome from './pages/RelatoriosHome';
 
 // =================================================================
 // 1. GUARDIÃO DE ROTAS SIMPLIFICADO
@@ -42,33 +48,33 @@ const PrivateRoute = ({ children, allowedRoles }) => {
 const MainLayout = ({ children }) => {
   const { signOut, user, escolaIdSelecionada, escolas, selecionarEscola } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  
+
   // Definimos quem tem permissão para ver o seletor de escolas global
   const isAdmin = ['Master', 'Coordenacao', 'Secretaria'].includes(user?.perfil);
 
   return (
     <div className="flex min-h-screen bg-slate-50">
-      <Sidebar 
-        user={user} 
-        onLogout={signOut} 
-        isOpen={sidebarOpen} 
-        onClose={() => setSidebarOpen(false)} 
+      <Sidebar
+        user={user}
+        onLogout={signOut}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
 
       <div className="flex-1 flex flex-col md:ml-64 transition-all duration-300">
         <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-30">
           <div className="flex items-center gap-3">
-            <button 
+            <button
               onClick={() => setSidebarOpen(true)}
               className="md:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
             </button>
-            
+
             {/* O SELETOR SÓ APARECE PARA O ADMINISTRADOR */}
             {isAdmin ? (
               <div className="hidden md:flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                <select 
+                <select
                   value={escolaIdSelecionada || ""}
                   onChange={(e) => selecionarEscola(e.target.value)}
                   className="bg-transparent border-none text-[11px] font-black uppercase tracking-tight text-slate-700 focus:ring-0 cursor-pointer min-w-[220px]"
@@ -82,13 +88,13 @@ const MainLayout = ({ children }) => {
             ) : (
               /* Para o Professor, mostramos apenas um título ou o nome da escola atual dele */
               <div className="hidden md:block">
-                 <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
-                   Ambiente de Lançamentos Docente
-                 </h2>
+                <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">
+                  Ambiente de Lançamentos Docente
+                </h2>
               </div>
             )}
           </div>
-          
+
           {/* Info do Usuário e Logout (Mantém igual) */}
           <div className="flex items-center gap-4">
             <div className="text-right">
@@ -96,7 +102,7 @@ const MainLayout = ({ children }) => {
               <p className="text-[10px] text-primary uppercase font-bold">{user?.perfil_descricao}</p>
             </div>
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold border border-primary/20">
-              {user?.nome?.substring(0,2).toUpperCase()}
+              {user?.nome?.substring(0, 2).toUpperCase()}
             </div>
           </div>
         </header>
@@ -176,6 +182,60 @@ function App() {
             <MainLayout><FolhaFrequencia /></MainLayout>
           </PrivateRoute>
         } />
+
+        <Route path="/professor/planejamento/:turmaId" element={
+          <PrivateRoute allowedRoles={['Professor']}>
+            <MainLayout><PlanejamentoDocente /></MainLayout>
+          </PrivateRoute>
+        } />
+
+        <Route path="/validar-planejamentos" element={
+          <PrivateRoute allowedRoles={['Master', 'Coordenacao']}>
+            <MainLayout><ValidarPlanejamentos /></MainLayout>
+          </PrivateRoute>
+        } />
+
+        <Route path="/professor/diario/:turmaId" element={
+          <PrivateRoute allowedRoles={['Professor']}>
+            <MainLayout><DiarioClasse /></MainLayout>
+          </PrivateRoute>
+        } />
+
+        <Route path="/relatorios/ata-resultados" element={
+          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
+            <MainLayout><AtaResultados /></MainLayout>
+          </PrivateRoute>
+        } />
+
+        <Route path="/professor/grade/:turmaId" element={
+          <PrivateRoute allowedRoles={['Professor']}>
+            <MainLayout><GradeHorarios /></MainLayout>
+          </PrivateRoute>
+        } />
+
+        <Route path="/turmas" element={
+          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
+            <MainLayout><GestaoTurmas /></MainLayout>
+          </PrivateRoute>
+        } />
+
+
+        {/* HOME DOS RELATÓRIOS (PORTAL) */}
+        <Route path="/relatorios" element={
+          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
+            <MainLayout><RelatoriosHome /></MainLayout>
+          </PrivateRoute>
+        } />
+
+        {/* RELATÓRIO ESPECÍFICO (ATA) */}
+        <Route path="/relatorios/ata-resultados" element={
+          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
+            <MainLayout><AtaResultados /></MainLayout>
+          </PrivateRoute>
+        } />
+
+        <Route path="/professor/frequencia" element={<Navigate to="/portal-professor" />} />
+        <Route path="/professor/diario" element={<Navigate to="/portal-professor" />} />
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
