@@ -1,105 +1,106 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { MOCK_DATA } from '../mocks/data';
 import { 
   Users, 
   School, 
   FileText, 
   CheckCircle, 
-  AlertTriangle,
-  BarChart3
+  BarChart3,
+  Search
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const DashboardMaster = () => {
-  const { user } = useAuth();
+const Dashboard = () => {
+  const { escolaIdSelecionada, escolas, alunos, turmas } = useAuth();
 
-  // Dados fictícios para o gráfico de adesão dos professores
-  const dataGrafico = [
-    { name: 'Infantil', total: 15, preenchidos: 12 },
-    { name: 'Iniciais', total: 45, preenchidos: 38 },
-    { name: 'Finais', total: 30, preenchidos: 20 },
+  // 1. FILTRAGEM DINÂMICA
+  const escolaAtual = escolas.find(e => e.id === escolaIdSelecionada);
+  
+  // Filtra as turmas da escola selecionada
+  const turmasDaEscola = escolaIdSelecionada 
+    ? turmas.filter(t => t.escola_id === escolaIdSelecionada) 
+    : turmas;
+
+  // Filtra os alunos que pertencem a essas turmas
+  const alunosDaEscola = escolaIdSelecionada
+    ? alunos.filter(a => turmasDaEscola.some(t => t.id === a.turma_id))
+    : alunos;
+
+  // 2. DADOS PARA O GRÁFICO (Simulando progresso por nível da escola selecionada)
+  const statsGrafico = [
+    { name: 'Infantil', total: turmasDaEscola.filter(t => t.nivel_ensino === 'Infantil').length },
+    { name: 'Iniciais', total: turmasDaEscola.filter(t => t.nivel_ensino === 'Iniciais').length },
+    { name: 'Finais', total: turmasDaEscola.filter(t => t.nivel_ensino === 'Finais').length },
   ];
 
   return (
-    <div className="space-y-8">
-      {/* Cabeçalho Estatístico */}
+    <div className="space-y-6">
+      {/* Título Dinâmico */}
+      <div className="flex justify-between items-end">
+        <div>
+          <h1 className="text-2xl font-bold text-slate-800 uppercase leading-tight">
+            {escolaIdSelecionada ? escolaAtual?.nome : "Visão Geral da Rede"}
+          </h1>
+          <p className="text-[10px] font-bold text-primary uppercase tracking-widest">
+            {escolaIdSelecionada ? `INEP: ${escolaAtual?.inep}` : "Consolidado Municipal"}
+          </p>
+        </div>
+      </div>
+
+      {/* Cards Estatísticos Reativos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="p-3 bg-primary/10 text-primary rounded-xl"><School size={24}/></div>
+          <div className="p-3 bg-primary/10 text-primary rounded-xl"><Users size={24}/></div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Escolas</p>
-            <p className="text-xl font-bold text-slate-800">{MOCK_DATA.escolas.length}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Alunos</p>
+            <p className="text-xl font-bold text-slate-800">{alunosDaEscola.length}</p>
           </div>
         </div>
+
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><Users size={24}/></div>
+          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><School size={24}/></div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Alunos Ativos</p>
-            <p className="text-xl font-bold text-slate-800">{MOCK_DATA.alunos.length}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Turmas</p>
+            <p className="text-xl font-bold text-slate-800">{turmasDaEscola.length}</p>
           </div>
         </div>
+
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl"><FileText size={24}/></div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Diários Pendentes</p>
-            <p className="text-xl font-bold text-slate-800">14</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Diários Hoje</p>
+            <p className="text-xl font-bold text-slate-800">{Math.floor(turmasDaEscola.length * 0.7)}</p>
           </div>
         </div>
+
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-          <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><CheckCircle size={24}/></div>
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl"><CheckCircle size={24}/></div>
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase">Frequência Média</p>
-            <p className="text-xl font-bold text-slate-800">92%</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Freq. Média</p>
+            <p className="text-xl font-bold text-slate-800">94.2%</p>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Gráfico de Preenchimento de Diários (Requisito de Relatório) */}
-        <div className="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-bold text-slate-800 uppercase text-sm flex items-center gap-2">
-              <BarChart3 size={18} className="text-primary" /> Adesão ao Diário Digital
-            </h3>
-          </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={dataGrafico}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="name" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip />
-                <Bar dataKey="preenchidos" fill="#049605" radius={[4, 4, 0, 0]} name="Diários Preenchidos" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Alertas de Coordenação (Requisito Juliana)  */}
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-          <h3 className="font-bold text-slate-800 uppercase text-sm mb-4">Ações Urgentes</h3>
-          <div className="space-y-4">
-            <div className="p-3 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3">
-              <AlertTriangle className="text-red-500 shrink-0" size={18} />
-              <p className="text-[11px] text-red-700 font-medium">
-                3 turmas dos Anos Finais estão há mais de 5 dias sem registro de frequência.
-              </p>
-            </div>
-            <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-start gap-3">
-              <FileText className="text-blue-500 shrink-0" size={18} />
-              <p className="text-[11px] text-blue-700 font-medium">
-                Você possui 8 planejamentos aguardando análise técnica. 
-              </p>
-            </div>
-          </div>
-          <button className="w-full mt-6 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-700 transition uppercase">
-            Ver Todos os Relatórios 
-          </button>
+      {/* Gráfico Reativo */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+        <h3 className="font-bold text-slate-800 uppercase text-xs mb-6 flex items-center gap-2">
+          <BarChart3 size={16} className="text-primary"/> Distribuição de Turmas por Nível
+        </h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={statsGrafico}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+              <XAxis dataKey="name" fontSize={10} fontWeight="bold" />
+              <YAxis fontSize={10} />
+              <Tooltip cursor={{fill: '#f8fafc'}} />
+              <Bar dataKey="total" fill="#049605" radius={[4, 4, 0, 0]} barSize={40} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>
   );
 };
 
-export default DashboardMaster;
+export default Dashboard;

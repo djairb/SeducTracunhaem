@@ -7,19 +7,30 @@ import {
   BookOpen, 
   FileBarChart, 
   LogOut,
-  X
+  X,
+  School // Importando o ícone de escola
 } from 'lucide-react';
 
 const Sidebar = ({ user, onLogout, isOpen, onClose }) => {
   
-  // Links baseados nos requisitos de acesso da secretaria [cite: 2, 6]
-  const menuItems = [
+  // 1. DEFINIÇÃO DINÂMICA DOS MENUS
+  const adminMenuItems = [
     { path: '/', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
-    { path: '/alunos', label: 'Alunos', icon: <Users size={20} /> },
+    { path: '/escolas', label: 'Gestão de Escolas', icon: <School size={20} /> }, // ADICIONADO AQUI
+    { path: '/alunos', label: 'Lista de Alunos', icon: <Users size={20} /> },
     { path: '/professores', label: 'Professores', icon: <GraduationCap size={20} /> },
     { path: '/turmas', label: 'Turmas & Gestão', icon: <BookOpen size={20} /> },
     { path: '/relatorios', label: 'Relatórios', icon: <FileBarChart size={20} /> },
   ];
+
+  const professorMenuItems = [
+    { path: '/portal-professor', label: 'Minhas Turmas', icon: <LayoutDashboard size={20} /> },
+    { path: '/professor/diario', label: 'Diário de Classe', icon: <BookOpen size={20} /> },
+    { path: '/professor/avaliacao', label: 'Avaliações', icon: <FileBarChart size={20} /> },
+  ];
+
+  // Escolhe qual menu mostrar baseado no perfil do usuário
+  const menuItems = user?.perfil === 'Professor' ? professorMenuItems : adminMenuItems;
 
   return (
     <>
@@ -38,29 +49,29 @@ const Sidebar = ({ user, onLogout, isOpen, onClose }) => {
         md:translate-x-0
       `}>
         <div className="p-6 flex flex-col h-full">
-          {/* Logo e Botão Fechar (Mobile) */}
+          {/* Logo */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center text-white font-bold">T</div>
+              <div className="w-8 h-8 bg-primary rounded flex items-center justify-center text-white font-bold shadow-sm shadow-primary/40">T</div>
               <span className="font-bold text-slate-800 uppercase tracking-tight">Seduc <span className="text-primary">Admin</span></span>
             </div>
-            <button onClick={onClose} className="md:hidden text-slate-400">
+            <button onClick={onClose} className="md:hidden text-slate-400 p-1">
               <X size={24} />
             </button>
           </div>
 
-          {/* Navegação */}
-          <nav className="flex-1 space-y-1">
+          {/* Navegação Dinâmica */}
+          <nav className="flex-1 space-y-1 overflow-y-auto pr-2 custom-scrollbar">
             {menuItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 onClick={onClose}
                 className={({ isActive }) => `
-                  flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold uppercase transition-all
+                  flex items-center gap-3 px-4 py-3 rounded-xl text-[11px] font-black uppercase transition-all tracking-tight
                   ${isActive 
-                    ? 'bg-primary/10 text-primary border-r-4 border-primary' 
-                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700'}
+                    ? 'bg-primary/10 text-primary border-r-4 border-primary shadow-sm' 
+                    : 'text-slate-500 hover:bg-slate-50 hover:text-slate-800'}
                 `}
               >
                 {item.icon}
@@ -70,17 +81,18 @@ const Sidebar = ({ user, onLogout, isOpen, onClose }) => {
           </nav>
 
           {/* Info Usuário e Logout */}
-          <div className="pt-6 border-t border-slate-100">
-            <div className="bg-slate-50 p-4 rounded-2xl mb-4">
-              <p className="text-[10px] font-bold text-slate-400 uppercase">Usuário Logado</p>
+          <div className="pt-6 border-t border-slate-100 mt-auto">
+            <div className="bg-slate-50 p-4 rounded-2xl mb-4 border border-slate-100">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Acesso Atual</p>
               <p className="text-xs font-bold text-slate-700 truncate">{user?.nome}</p>
+              <p className="text-[9px] font-bold text-primary uppercase">{user?.perfil_descricao || user?.perfil}</p>
             </div>
             <button 
               onClick={onLogout}
-              className="flex items-center gap-3 w-full px-4 py-3 text-red-500 font-bold text-sm uppercase hover:bg-red-50 rounded-xl transition-colors"
+              className="flex items-center gap-3 w-full px-4 py-3 text-red-500 font-black text-[11px] uppercase hover:bg-red-50 rounded-xl transition-all active:scale-95"
             >
-              <LogOut size={20} />
-              Sair do Sistema
+              <LogOut size={18} />
+              Encerrar Sessão
             </button>
           </div>
         </div>

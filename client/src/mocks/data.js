@@ -1,8 +1,8 @@
 export const MOCK_DATA = {
     escolas: [
-        { id: 1, nome: "Escola Municipal Joaquim Canuto de Araújo", inep: "12345678", endereco: "Centro", ativo: true, nivel: "Infantil" },
+        { id: 1, nome: "Escola Municipal Joaquim Canuto de Araújo", inep: "12345678", endereco: "Bairro Novo", ativo: true, nivel: "Infantil" },
         { id: 2, nome: "Escola Municipal Tancredo Neves", inep: "87654321", endereco: "Bairro Novo", ativo: true, nivel: "Iniciais" },
-        { id: 3, nome: "Escola Municipal Profa. Maria Clemilda Coelho da Silva", inep: "13579246", endereco: "Zona Rural", ativo: true, nivel: "Finais" }
+        { id: 3, nome: "Escola Municipal Profa. Maria Clemilda Coelho da Silva", inep: "13579246", endereco: "Baixa Verde", ativo: true, nivel: "Finais" }
     ],
     turmas: [
         // Escola 1: Joaquim Canuto (Infantil)
