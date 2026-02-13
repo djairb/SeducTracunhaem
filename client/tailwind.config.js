@@ -1,18 +1,15 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: [
-    "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
-  ],
+  content: ["./index.html", "./src/**/*.{js,jsx}"],
   theme: {
     extend: {
       colors: {
-        'seduc-primary': '#046c02',
-        'seduc-secondary': '#ffffff',
+        primary: {
+          DEFAULT: '#049605',
+          dark: '#037a04',
+          light: '#e6f4e6',
+        }
       },
-      fontFamily: {
-        sans: ['Inter', 'sans-serif'],
-      }
     },
   },
   plugins: [],

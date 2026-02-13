@@ -1,262 +1,92 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { Menu, LogOut } from 'lucide-react';
 
-// --- CONTEXTO DE AUTENTICAÇÃO ---
+// --- CONTEXTO E MOCK ---
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-
-// --- COMPONENTES ---
-import Sidebar from './components/Sidebar';
 
 // --- PÁGINAS ---
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import CadastroAluno from './pages/CadastroAluno';
-import ListaAlunos from './pages/ListaAlunos';
-import ListaProfessores from './pages/ListaProfessores';
-import CadastroProfessor from './pages/CadastroProfessor';
-import Disciplinas from './pages/Disciplinas';
-import ListaTurmas from './pages/ListaTurmas';
-import GerenciarTurma from './pages/GerenciarTurma';
-import DashboardProfessor from './pages/professor/DashboardProfessor';
-import DiarioClasse from './pages/professor/DiarioClasse';
-import AvaliacaoAluno from './pages/professor/AvaliacaoAluno';
-
-import logoSeduc from './img/seduc-logo2.jpg';
-import RelatoriosTurma from './pages/RelatoriosTurma';
+import Dashboard from './pages/Dashboard'; // Admin / Secretaria
+import DashboardProfessor from './pages/professor/DashboardProfessor'; // Será genérico por enquanto
 
 // =================================================================
-// 1. COMPONENTE DE ROTA PRIVADA (O GUARDIÃO)
+// 1. GUARDIÃO DE ROTAS SIMPLIFICADO
 // =================================================================
 const PrivateRoute = ({ children, allowedRoles }) => {
-  const { signed, loading, user } = useAuth();
+  const { signed, user, loading } = useAuth();
 
-  if (loading) {
-    return <div className="h-screen flex items-center justify-center bg-seduc-primary text-white">Carregando sistema...</div>;
-  }
-
-  // Não tá logado? Manda pro Login
+  if (loading) return <div className="h-screen flex items-center justify-center bg-primary text-white">Carregando...</div>;
   if (!signed) return <Navigate to="/login" />;
 
-  // Se a rota exige permissão específica e o usuário não tem...
+  // Se for professor, mas tentar acessar rota de Admin, redireciona para o portal dele
   if (allowedRoles && !allowedRoles.includes(user.perfil)) {
-    // Professor tentando acessar Admin -> Vai pro Portal dele
-    if (user.perfil === 'Professor') return <Navigate to="/portal-professor" />;
-    // Admin tentando acessar algo proibido -> Vai pro Dashboard Admin
-    return <Navigate to="/" />;
+    return <Navigate to={user.perfil === 'Professor' ? "/portal-professor" : "/"} />;
   }
 
   return children;
 };
 
 // =================================================================
-// 2. LAYOUT ADMINISTRATIVO (COM SIDEBAR E MENU MOBILE)
+// 2. LAYOUT ÚNICO DE VALIDAÇÃO (Limpo para o Secretário)
 // =================================================================
-const LayoutAdmin = ({ children }) => {
-  const { user, signOut } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false); // Controle local do menu
-
+const MainLayout = ({ children }) => {
+  const { signOut, user } = useAuth();
+  
   return (
-    <div className="flex min-h-screen bg-gray-50">
-
-      {/* Sidebar agora recebe o signOut do Contexto */}
-      <Sidebar
-        user={user}
-        onLogout={signOut}
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
-
-      <main className="flex-1 md:ml-64 transition-all duration-300">
-        {/* Header Mobile */}
-        <div className="md:hidden bg-seduc-primary text-white p-4 flex items-center justify-between sticky top-0 z-30 shadow-md">
-          <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarOpen(true)}>
-              <Menu size={28} className="text-seduc-secondary" />
-            </button>
-            <span className="font-bold text-lg">Seduc.</span>
-          </div>
-          <div className="w-8 h-8 rounded-full bg-seduc-secondary text-seduc-primary flex items-center justify-center font-bold text-xs">
-            {user?.nome?.substring(0, 2).toUpperCase()}
-          </div>
+    <div className="min-h-screen bg-slate-50">
+      <header className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary rounded flex items-center justify-center text-white font-bold">S</div>
+          <h1 className="font-bold text-slate-800">Seduc <span className="text-primary">Tracunhaém</span></h1>
         </div>
-
-        {/* Conteúdo da Página */}
-        <div className="p-4 md:p-8 overflow-y-auto">
-          {children}
+        
+        <div className="flex items-center gap-4">
+          <div className="text-right mr-2">
+            <p className="text-sm font-bold text-slate-700">{user?.nome}</p>
+            <p className="text-[10px] text-primary uppercase font-bold">{user?.perfil_descricao || user?.perfil}</p>
+          </div>
+          <button 
+            onClick={signOut}
+            className="text-xs font-bold text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg transition"
+          >
+            Sair
+          </button>
         </div>
+      </header>
+      <main className="p-6 max-w-7xl mx-auto uppercase">
+        {children}
       </main>
     </div>
   );
 };
 
 // =================================================================
-// 3. LAYOUT PROFESSOR (LIMPO, SEM SIDEBAR DE ADMIN)
-// =================================================================
-const LayoutProfessor = ({ children }) => {
-  const { user, signOut, alternarPerfil } = useAuth();
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-
-      {/* --- HEADER FIXO AZUL MARINHO --- */}
-      <header className="bg-seduc-primary text-white shadow-md border-b-[3px] border-seduc-secondary sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-
-          {/* Logo e Marca */}
-          <div className="flex items-center gap-3">
-            <img
-              src={logoSeduc}
-              alt="Logo Seduc"
-              className="h-10 w-auto rounded-lg border-2 border-white/20 shadow-sm"
-            />
-            <div>
-              <h1 className="text-xl font-bold tracking-tight leading-tight">
-                Seduc Tracunhaem<span className="text-seduc-secondary">.</span>
-              </h1>
-              <p className="text-[10px] text-blue-100 uppercase tracking-wider hidden md:block">
-                Portal do Professor
-              </p>
-            </div>
-          </div>
-
-          {/* Saudação e Logout */}
-          <div className="flex items-center gap-6">
-            <div className="text-right hidden md:block">
-              <p className="font-medium text-sm">Olá, {user?.nome?.split('(')[0]}</p>
-              <p className="text-[10px] text-blue-100 uppercase">{user?.nome?.match(/\(([^)]+)\)/)?.[1] || 'Docente'}</p>
-            </div>
-
-            <div className="flex bg-yellow-200 rounded-lg p-1 mr-4">
-              <button
-                onClick={() => alternarPerfil('Master')}
-                className="text-xs font-bold px-2 py-1 rounded-md text-yellow-700 hover:bg-yellow-100 transition"
-                title="Voltar para Secretaria"
-              >
-                Voltar p/ Secretaria
-              </button>
-            </div>
-
-            <button
-              onClick={signOut}
-              className="flex items-center gap-2 bg-seduc-primary border border-white text-white px-3 py-2 rounded-lg transition-colors text-sm font-medium hover:bg-white hover:text-seduc-primary"
-              title="Sair do sistema"
-            >
-              <LogOut size={18} />
-              <span className="hidden md:inline">Sair</span>
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Conteúdo das Páginas (Dashboard, Diário, etc) */}
-      <div className="p-6 max-w-7xl mx-auto animate-fadeIn">
-        {children}
-      </div>
-    </div>
-  );
-};
-
-// =================================================================
-// 4. APLICAÇÃO PRINCIPAL (ROTAS)
+// 3. APLICAÇÃO PRINCIPAL
 // =================================================================
 function App() {
   return (
-    // Envolvemos tudo no AuthProvider
     <AuthProvider>
       <Routes>
-
-        {/* Rota Pública */}
+        {/* Rota Pública de Entrada (Com os 4 botões) */}
         <Route path="/login" element={<Login />} />
 
-        {/* --- ROTAS ADMINISTRATIVAS (Master, Coordenação) --- */}
-        {/* Tudo aqui dentro ganha a Sidebar automaticamente */}
+        {/* Rota Administrativa (Junior/Juliana) */}
         <Route path="/" element={
           <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><Dashboard /></LayoutAdmin>
+            <MainLayout><Dashboard /></MainLayout>
           </PrivateRoute>
         } />
 
-        <Route path="/alunos" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><ListaAlunos /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-        <Route path="/alunos/novo" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><CadastroAluno /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-        <Route path="/alunos/editar/:id" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><CadastroAluno /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-        <Route path="/professores" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><ListaProfessores /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-        <Route path="/professores/novo" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><CadastroProfessor /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-        <Route path="/professores/editar/:id" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><CadastroProfessor /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-        <Route path="/disciplinas" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><Disciplinas /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-        <Route path="/turmas" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><ListaTurmas /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-        <Route path="/turmas/:id" element={
-          <PrivateRoute allowedRoles={['Master', 'Coordenacao', 'Secretaria']}>
-            <LayoutAdmin><GerenciarTurma /></LayoutAdmin>
-          </PrivateRoute>
-        } />
-
-
-        {/* --- ROTAS DO PROFESSOR --- */}
-        {/* Usa o layout limpo */}
+        {/* Rota do Professor (Infantil, Iniciais ou Finais) */}
+        {/* O DashboardProfessor internamente vai ler o nível do usuário logado */}
         <Route path="/portal-professor" element={
           <PrivateRoute allowedRoles={['Professor']}>
-            <LayoutProfessor><DashboardProfessor /></LayoutProfessor>
+            <MainLayout><DashboardProfessor /></MainLayout>
           </PrivateRoute>
         } />
 
-        <Route path="/professor/diario/:turmaId?" element={
-          <PrivateRoute allowedRoles={['Professor']}>
-            <LayoutProfessor><DiarioClasse /></LayoutProfessor>
-          </PrivateRoute>
-        } />
-
-        <Route path="/professor/avaliacao" element={
-          <PrivateRoute allowedRoles={['Professor']}>
-            <LayoutProfessor><AvaliacaoAluno /></LayoutProfessor>
-          </PrivateRoute>
-        } />
-
-        <Route path="/relatorios" element={<PrivateRoute allowedRoles={['Master', 'Coordenacao']}><LayoutAdmin><RelatoriosTurma /></LayoutAdmin></PrivateRoute>} />
-
-        {/* Rota Padrão (Redireciona para Home se url não existir, o PrivateRoute vai decidir para onde mandar depois) */}
-        <Route path="*" element={<Navigate to="/" />} />
-
+        {/* Fallback */}
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </AuthProvider>
   );

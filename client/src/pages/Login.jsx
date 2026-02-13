@@ -1,128 +1,110 @@
-import React, { useState } from 'react';
-import { Lock, Mail, ArrowRight, Loader } from 'lucide-react';
-import { useNavigate } from 'react-router-dom'; // <--- Para redirecionar
-import { useAuth } from '../contexts/AuthContext'; // <--- Nosso cérebro
-import logoSeduc from '../img/seduc-logo2.jpg';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { 
+  ShieldCheck, 
+  Baby, 
+  BookOpen, 
+  GraduationCap, 
+  ArrowRight 
+} from 'lucide-react';
+import logo from '../img/seduc-logo2.jpg';
 
-export default function Login() {
-    const [email, setEmail] = useState('');
-    const [senha, setSenha] = useState('');
-    const [erro, setErro] = useState('');
-    const [loading, setLoading] = useState(false);
+const Login = ({ onLogin }) => {
+  const perfis = [
+    { 
+      id: 'master', 
+      label: 'Secretaria (Master)', 
+      icon: <ShieldCheck className="w-8 h-8" />, 
+      desc: 'Gestão de rede, escolas e matrículas',
+      color: 'bg-blue-50 text-blue-600 border-blue-100'
+    },
+    { 
+      id: 'infantil', 
+      label: 'Educação Infantil', 
+      icon: <Baby className="w-8 h-8" />, 
+      desc: 'Creches e Pré-escola (Campos de Experiência)', // [cite: 9, 11]
+      color: 'bg-orange-50 text-orange-600 border-orange-100'
+    },
+    { 
+      id: 'iniciais', 
+      label: 'Anos Iniciais', 
+      icon: <BookOpen className="w-8 h-8" />, 
+      desc: '1º ao 5º ano (Foco em Alfabetização)', // [cite: 15, 18]
+      color: 'bg-emerald-50 text-emerald-600 border-emerald-100'
+    },
+    { 
+      id: 'finais', 
+      label: 'Anos Finais', 
+      icon: <GraduationCap className="w-8 h-8" />, 
+      desc: '6º ao 9º ano (Disciplinas Específicas)', // [cite: 23, 27]
+      color: 'bg-purple-50 text-purple-600 border-purple-100'
+    },
+  ];
 
-    const { signIn, signed } = useAuth(); // Pega a função de logar do contexto
-    const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
+      {/* Header com Logo */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-10 text-center"
+      >
+        <img 
+          src={logo} 
+          alt="Seduc Tracunhaém" 
+          className="w-48 h-auto mx-auto mb-4 drop-shadow-sm rounded-xl"
+        />
+        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
+          Seduc <span className="text-primary">Tracunhaém</span>
+        </h1>
+        <p className="text-slate-500 mt-2 font-medium">Portal de Gestão Acadêmica</p>
+      </motion.div>
 
-    // Se já estiver logado, redireciona
-    React.useEffect(() => {
-        if (signed) {
-            navigate('/');
-        }
-    }, [signed, navigate]);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setErro('');
-        setLoading(true);
-
-        try {
-            // Chama o AuthContext. Ele vai bater no back, salvar token e definir o user
-            const destino = await signIn(email, senha);
-
-            // Se deu certo, o contexto devolve pra onde devemos ir (Admin ou Portal)
-            navigate(destino);
-
-        } catch (error) {
-            // O Contexto já tratou o erro e devolveu uma mensagem amigável no throw
-            setErro(error.message);
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-seduc-primary p-4 relative overflow-hidden">
-
-            <div className="absolute inset-0 opacity-5 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-seduc-secondary to-transparent"></div>
-
-            <div className="w-full max-w-[450px] relative z-10">
-
-                {/* Cabeçalho */}
-                <div className="text-center mb-8">
-                    <img
-                        src={logoSeduc}
-                        alt="Logo Seduc"
-                        className="h-16 w-auto mx-auto mb-4 rounded-xl shadow-lg shadow-black/20"
-                    />
-                    <h1 className="text-3xl font-bold text-white tracking-tight">
-                        Seduc Tracunhaem<span className="text-seduc-secondary">.</span>
-                    </h1>
-                    <p className="text-slate-300 mt-2">Sistema de Gestão Acadêmica</p>
-                </div>
-
-                {/* Card de Login */}
-                <div className="bg-white rounded-2xl shadow-2xl p-8 md:p-10 backdrop-blur-sm">
-                    <h2 className="text-xl font-semibold text-gray-800 text-center mb-6">
-                        Acesse sua conta
-                    </h2>
-
-                    <form onSubmit={handleSubmit} className="space-y-5">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 hidden">Email</label>
-                            <div className="relative">
-                                <Mail className="absolute left-4 top-3.5 text-gray-400" size={20} />
-                                <input
-                                    type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-seduc-primary/20 focus:border-seduc-primary transition outline-none text-gray-700 placeholder-gray-400"
-                                    placeholder="Email institucional"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2 hidden">Senha</label>
-                            <div className="relative">
-                                <Lock className="absolute left-4 top-3.5 text-gray-400" size={20} />
-                                <input
-                                    type="password"
-                                    value={senha}
-                                    onChange={(e) => setSenha(e.target.value)}
-                                    className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-seduc-primary/20 focus:border-seduc-primary transition outline-none text-gray-700 placeholder-gray-400"
-                                    placeholder="Sua senha"
-                                    required
-                                />
-                            </div>
-                        </div>
-
-                        {erro && (
-                            <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg text-center border border-red-100 font-medium animate-pulse">
-                                {erro}
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-seduc-primary text-white py-3.5 rounded-lg font-bold hover:bg-green-800 active:scale-[0.99] transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-seduc-primary/20 disabled:opacity-70"
-                        >
-                            {loading ? (
-                                <>
-                                    <Loader className="animate-spin" size={20} /> Validando...
-                                </>
-                            ) : (
-                                <>
-                                    Entrar <ArrowRight size={20} className="text-seduc-secondary" />
-                                </>
-                            )}
-                        </button>
-                    </form>
-                </div>
-                <p className="text-center text-slate-400 text-sm mt-8">
-                    © 2026 Seduc Tracunhaem. Todos os direitos reservados.
-                </p>
+      {/* Grid de Perfis */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5 w-full max-w-3xl">
+        {perfis.map((perfil, index) => (
+          <motion.button
+            key={perfil.id}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.1 }}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => onLogin(perfil.id)}
+            className="group relative p-5 bg-white rounded-2xl shadow-sm border border-slate-200 hover:border-primary hover:shadow-md transition-all duration-300 text-left flex items-center"
+          >
+            <div className={`p-4 rounded-xl mr-5 transition-colors ${perfil.color} group-hover:bg-primary group-hover:text-white`}>
+              {perfil.icon}
             </div>
-        </div>
-    );
-}
+            
+            <div className="flex-1">
+              <h3 className="font-bold text-lg text-slate-800 group-hover:text-primary">
+                {perfil.label}
+              </h3>
+              <p className="text-sm text-slate-500 leading-relaxed">
+                {perfil.desc}
+              </p>
+            </div>
+
+            <ArrowRight className="w-5 h-5 text-slate-300 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+          </motion.button>
+        ))}
+      </div>
+
+      {/* Footer Informativo */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="mt-12 flex flex-col items-center space-y-2"
+      >
+        <div className="h-1 w-12 bg-primary rounded-full mb-2"></div>
+        <p className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.2em]">
+          Ambiente de Homologação Pedagógica 2026
+        </p>
+      </motion.div>
+    </div>
+  );
+};
+
+export default Login;
