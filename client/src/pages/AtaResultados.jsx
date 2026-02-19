@@ -1,118 +1,176 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { FileSpreadsheet, Download, TrendingUp, AlertTriangle, X, Printer } from 'lucide-react';
+import { 
+  FileBarChart, 
+  Printer, 
+  ArrowLeft, 
+  Download, 
+  Search,
+  School
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const AtaResultados = () => {
-    const { escolaIdSelecionada, turmas, getAlunosPorEscola } = useAuth();
-    const [turmaSelecionada, setTurmaSelecionada] = useState(null);
+  const { turmas, alunos, frequencias, escolaIdSelecionada, escolas } = useAuth();
+  const navigate = useNavigate();
+  
+  const [turmaId, setTurmaId] = useState('');
 
-    const turmasDaEscola = turmas.filter(t => t.escola_id === Number(escolaIdSelecionada));
+  // 1. FILTRAGEM POR ESCOLA (Respeitando o Header)
+  const turmasDaEscola = useMemo(() => {
+    return turmas.filter(t => Number(t.escola_id) === Number(escolaIdSelecionada));
+  }, [turmas, escolaIdSelecionada]);
 
-    return (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic leading-none">Ata de Resultados</h1>
-                    <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">Consolidado de Desempenho por Unidade</p>
-                </div>
-            </div>
+  const escolaAtual = escolas.find(e => e.id === Number(escolaIdSelecionada));
+  const turmaAtual = turmas.find(t => t.id === Number(turmaId));
+  const alunosDaTurma = alunos.filter(a => Number(a.turma_id) === Number(turmaId));
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {turmasDaEscola.map(turma => {
-                    const alunos = getAlunosPorEscola().filter(a => Number(a.turma_id) === Number(turma.id));
+  // 2. LÓGICA DE CÁLCULO DE FREQUÊNCIA (Pente Fino do Júnior)
+  const calcularPresenca = (alunoId) => {
+    const chamadasTurma = frequencias.filter(f => f.turmaId === Number(turmaId));
+    if (chamadasTurma.length === 0) return '100%';
 
-                    return (
-                        <div key={turma.id} className="bg-white rounded-[2.5rem] border border-slate-100 p-6 shadow-sm flex flex-col justify-between hover:shadow-md transition-all group">
-                            <div>
-                                <div className="flex justify-between items-start mb-4">
-                                    <span className="px-3 py-1 bg-primary/10 text-primary text-[9px] font-black uppercase rounded-lg">
-                                        {turma.nivel_ensino}
-                                    </span>
-                                    <TrendingUp size={18} className="text-emerald-500" />
-                                </div>
-                                <h3 className="text-lg font-black text-slate-800 uppercase leading-tight mb-1">{turma.nome}</h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">{alunos.length} Alunos Matriculados</p>
-                            </div>
+    let totalPresencas = 0;
+    let totalAulas = chamadasTurma.length;
 
-                            <button
-                                onClick={() => setTurmaSelecionada(turma)}
-                                className="mt-6 w-full py-4 bg-slate-50 text-slate-600 rounded-2xl text-[10px] font-black uppercase group-hover:bg-slate-800 group-hover:text-white transition-all flex items-center justify-center gap-2"
-                            >
-                                <FileSpreadsheet size={16} /> Gerar Ata de Resultados
-                            </button>
-                        </div>
-                    );
-                })}
-            </div>
+    chamadasTurma.forEach(chamada => {
+      const registro = chamada.presencas.find(p => p.alunoId === alunoId);
+      // 'P' ou 'J' (Justificada) contam como presença para fins de estatística
+      if (registro?.status === 'P' || registro?.status === 'J') {
+        totalPresencas++;
+      }
+    });
 
-            {/* MODAL DA ATA (O QUE DEVE SER EXIBIDO) */}
-            {turmaSelecionada && (
-                <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
-                    <div className="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-                        <div className="p-8 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-                            <div>
-                                <h2 className="text-xl font-black text-slate-800 uppercase italic">Ata de Resultados Finais</h2>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">{turmaSelecionada.nome} • ANO LETIVO 2026</p>
-                            </div>
-                            <div className="flex gap-2">
-                                <button className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-primary transition-colors">
-                                    <Printer size={20} />
-                                </button>
-                                <button
-                                    onClick={() => setTurmaSelecionada(null)}
-                                    className="p-3 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-red-500 transition-colors"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
-                        </div>
+    return ((totalPresencas / totalAulas) * 100).toFixed(0) + '%';
+  };
 
-                        <div className="flex-1 overflow-y-auto p-8">
-                            <table className="w-full border-collapse">
-                                <thead>
-                                    <tr className="border-b-2 border-slate-100">
-                                        <th className="text-left py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Estudante</th>
-                                        <th className="text-center py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Média Final</th>
-                                        <th className="text-center py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Faltas</th>
-                                        <th className="text-right py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Situação</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-slate-50">
-                                    {getAlunosPorEscola()
-                                        .filter(a => Number(a.turma_id) === Number(turmaSelecionada.id))
-                                        .map(aluno => (
-                                            <tr key={aluno.id} className="hover:bg-slate-50/50 transition-colors group">
-                                                <td className="py-4 font-bold text-slate-700 text-xs uppercase">{aluno.nome}</td>
-                                                <td className="py-4 text-center font-black text-slate-600">
-                                                    {/* Gera uma média aleatória entre 6.0 e 9.8 */}
-                                                    {(Math.random() * (9.8 - 6.0) + 6.0).toFixed(1)}
-                                                </td>
-                                                <td className="py-4 text-center font-black text-slate-600">
-                                                    {/* Gera faltas aleatórias entre 0 e 12 */}
-                                                    {Math.floor(Math.random() * 12)}
-                                                </td>
-                                                <td className="py-4 text-right">
-                                                    <span className="px-3 py-1 bg-emerald-100 text-emerald-600 text-[9px] font-black uppercase rounded-lg">Aprovado</span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
-                        </div>
+  const handlePrint = () => {
+    window.print();
+  };
 
-                        <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-between items-center">
-                            <p className="text-[9px] font-bold text-slate-400 uppercase max-w-xs leading-relaxed">
-                                Documento gerado eletronicamente pelo sistema de gestão municipal - SEDUC.
-                            </p>
-                            <button className="bg-primary text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase shadow-lg shadow-primary/20 flex items-center gap-2 hover:scale-105 transition-all">
-                                <Download size={16} /> Baixar PDF Oficial
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
+  return (
+    <div className="space-y-6 pb-20">
+      {/* HEADER - OCULTO NA IMPRESSÃO */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 print:hidden">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="p-3 bg-white rounded-2xl border border-slate-100 text-slate-400">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-slate-800 uppercase italic tracking-tighter">Ata de Resultados</h1>
+            <p className="text-[10px] font-black text-primary uppercase tracking-widest flex items-center gap-2">
+               <School size={10}/> {escolaAtual?.nome || 'Selecione uma Unidade'}
+            </p>
+          </div>
         </div>
-    );
+
+        <div className="flex items-center gap-3">
+          <select 
+            value={turmaId}
+            onChange={(e) => setTurmaId(e.target.value)}
+            className="bg-white border-none rounded-xl text-[10px] font-black uppercase p-3 shadow-sm focus:ring-2 focus:ring-primary min-w-[200px]"
+          >
+            <option value="">Selecionar Turma...</option>
+            {turmasDaEscola.map(t => (
+              <option key={t.id} value={t.id}>{t.nome}</option>
+            ))}
+          </select>
+          
+          <button 
+            onClick={handlePrint}
+            disabled={!turmaId}
+            className="bg-primary text-white px-6 py-3 rounded-xl font-black text-[10px] uppercase flex items-center gap-2 shadow-lg disabled:opacity-50"
+          >
+            <Printer size={16} /> Imprimir Ata
+          </button>
+        </div>
+      </div>
+
+      {/* DOCUMENTO DA ATA (FORMATADO PARA IMPRESSÃO) */}
+      {turmaId ? (
+        <div className="bg-white p-10 rounded-[2.5rem] border border-slate-100 shadow-sm print:shadow-none print:border-none print:p-0">
+          
+          {/* CABEÇALHO OFICIAL */}
+          <div className="text-center space-y-2 mb-10">
+            <h2 className="text-sm font-black uppercase tracking-widest text-slate-400">Prefeitura Municipal de Tracunhaém</h2>
+            <h3 className="text-lg font-black uppercase italic text-slate-800">Secretaria Municipal de Educação</h3>
+            <div className="h-1 w-20 bg-primary mx-auto rounded-full"></div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase mt-4">
+              Ata de Resultados Finais - Ano Letivo 2026
+            </p>
+          </div>
+
+          {/* INFO DA TURMA */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8 p-6 bg-slate-50 rounded-3xl print:bg-white print:border print:border-slate-200">
+            <div>
+              <p className="text-[8px] font-black text-slate-400 uppercase">Unidade Escolar</p>
+              <p className="text-[10px] font-bold text-slate-800 uppercase">{escolaAtual?.nome}</p>
+            </div>
+            <div>
+              <p className="text-[8px] font-black text-slate-400 uppercase">Turma</p>
+              <p className="text-[10px] font-bold text-slate-800 uppercase">{turmaAtual?.nome}</p>
+            </div>
+            <div>
+              <p className="text-[8px] font-black text-slate-400 uppercase">Turno</p>
+              <p className="text-[10px] font-bold text-slate-800 uppercase">{turmaAtual?.turno}</p>
+            </div>
+            <div>
+              <p className="text-[8px] font-black text-slate-400 uppercase">Nível</p>
+              <p className="text-[10px] font-bold text-slate-800 uppercase">{turmaAtual?.nivel_ensino}</p>
+            </div>
+          </div>
+
+          {/* TABELA DE RESULTADOS */}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse border border-slate-200">
+              <thead>
+                <tr className="bg-slate-800 text-white print:bg-slate-200 print:text-black">
+                  <th className="p-3 text-[9px] font-black uppercase border border-slate-300">Nº</th>
+                  <th className="p-3 text-[9px] font-black uppercase border border-slate-300">Nome do Aluno</th>
+                  <th className="p-3 text-[9px] font-black uppercase border border-slate-300 text-center">Frequência (%)</th>
+                  <th className="p-3 text-[9px] font-black uppercase border border-slate-300 text-center">Resultado Final</th>
+                  <th className="p-3 text-[9px] font-black uppercase border border-slate-300">Observações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {alunosDaTurma.map((aluno, index) => (
+                  <tr key={aluno.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="p-3 text-[10px] font-bold text-slate-400 border border-slate-200 text-center">{index + 1}</td>
+                    <td className="p-3 text-[10px] font-black text-slate-700 uppercase border border-slate-200">{aluno.nome}</td>
+                    <td className="p-3 text-[10px] font-bold text-slate-700 border border-slate-200 text-center">
+                      {calcularPresenca(aluno.id)}
+                    </td>
+                    <td className="p-3 text-[10px] font-black text-center border border-slate-200">
+                      <span className="text-emerald-600">APROVADO</span>
+                    </td>
+                    <td className="p-3 text-[9px] text-slate-400 italic border border-slate-200">
+                      ---
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ESPAÇO PARA ASSINATURA - APARECE APENAS NA IMPRESSÃO */}
+          <div className="hidden print:flex justify-around mt-20 text-center">
+            <div className="w-64 border-t border-black pt-2">
+              <p className="text-[10px] font-black uppercase">Secretário(a) Escolar</p>
+            </div>
+            <div className="w-64 border-t border-black pt-2">
+              <p className="text-[10px] font-black uppercase">Diretor(a)</p>
+            </div>
+          </div>
+
+        </div>
+      ) : (
+        <div className="h-96 flex flex-col items-center justify-center bg-white border-2 border-dashed border-slate-200 rounded-[3rem] text-slate-300">
+          <FileBarChart size={48} className="mb-2"/>
+          <p className="font-black text-[10px] uppercase">Selecione uma turma para gerar a Ata de Resultados</p>
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default AtaResultados;

@@ -30,6 +30,7 @@ const Sidebar = ({ user, onLogout, isOpen, onClose }) => {
     { path: '/relatorios', label: 'Relatórios', icon: <FileBarChart size={20} /> },
     { path: '/validar-planejamentos', label: 'Validar Planos', icon: <ClipboardCheck size={20} /> },
     { path: '/relatorios/ata-resultados', label: 'Ata de Resultados', icon: <FileSpreadsheet size={20} /> },
+    { path: '/gestao-horarios', label: 'Matriz & Horários', icon: <CalendarDays size={20} /> }, // NOVO ITEM
   ];
 
  const { getTurmasVinculadas } = useAuth();

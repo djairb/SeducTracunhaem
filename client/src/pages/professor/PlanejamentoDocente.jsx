@@ -1,111 +1,205 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, Send, ArrowLeft, BookOpen, ClipboardList } from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { 
+  Send, 
+  ArrowLeft, 
+  BookOpen, 
+  CheckCircle, 
+  AlertCircle,
+  Info
+} from 'lucide-react';
 
 const PlanejamentoDocente = () => {
+  const { user, turmas, salvarPlanejamento } = useAuth();
   const { turmaId } = useParams();
   const navigate = useNavigate();
-  const { turmas, salvarPlanejamento } = useAuth();
-  
+
   const turmaAtual = turmas.find(t => t.id === Number(turmaId));
   
-  const [mes, setMes] = useState('Março');
-  const [objetivos, setObjetivos] = useState('');
-  const [conteudo, setConteudo] = useState('');
+  // Estado inicial dinâmico baseado no nível de ensino
+  const [formData, setFormData] = useState({
+    titulo: '',
+    dataInicio: '',
+    dataFim: '',
+    // Campos da Ed. Infantil
+    remanejarAmpliar: '',
+    registroVivencia: '',
+    propostaDesenvolvimento: '',
+    organizacaoEspaco: '',
+    // Campos dos Anos Iniciais/Finais
+    conteudo: '',
+    metodologia: '',
+    avaliacao: '',
+    atividadesCasa: '',
+    materiais: '',
+    objetoAprendizagem: '',
+    // Campos exclusivos dos Anos Finais
+    unidadeTematica: '',
+    competenciasGerais: '',
+    competenciasEspecificas: ''
+  });
 
-  const handleEnviar = (e) => {
-    e.preventDefault();
-    salvarPlanejamento({
-      turmaId,
-      mes,
-      objetivos,
-      conteudo,
-    });
-    alert("Planejamento enviado para análise da Coordenação!");
-    navigate('/portal-professor');
+  const [enviado, setEnviado] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const dadosCompletos = {
+      ...formData,
+      turmaId: Number(turmaId),
+      professorId: user.id,
+      nivelEnsino: user.nivel_ensino, // Para a coordenação saber qual template ler
+    };
+    
+    salvarPlanejamento(dadosCompletos);
+    setEnviado(true);
+    setTimeout(() => navigate('/portal-professor'), 2000);
+  };
+
+  // Funções de renderização de campos específicos por nível (Conforme PDF)
+  const renderCamposInfantil = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="md:col-span-2">
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Remanejar / Ampliar</label>
+        <textarea name="remanejarAmpliar" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-24" />
+      </div>
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Registro de Vivência</label>
+        <textarea name="registroVivencia" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-32" />
+      </div>
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Proposta de Desenvolvimento</label>
+        <textarea name="propostaDesenvolvimento" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-32" />
+      </div>
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Organização de Tempo e Espaço</label>
+        <textarea name="organizacaoEspaco" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-24" />
+      </div>
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Objetivos de Aprendizagem</label>
+        <textarea name="objetoAprendizagem" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-24" />
+      </div>
+    </div>
+  );
+
+  const renderCamposIniciaisEFinais = () => (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {user.nivel_ensino === 'Finais' && (
+        <div className="md:col-span-2 bg-primary/5 p-6 rounded-[2rem] border border-primary/10 mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="md:col-span-2 text-[10px] font-black text-primary uppercase flex items-center gap-2 mb-2">
+            <Info size={14}/> Exclusivo Anos Finais (BNCC)
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Unidade Temática</label>
+            <input type="text" name="unidadeTematica" onChange={handleChange} className="w-full bg-white border-none rounded-xl p-3 text-sm" />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Objeto de Aprendizagem</label>
+            <input type="text" name="objetoAprendizagem" onChange={handleChange} className="w-full bg-white border-none rounded-xl p-3 text-sm" />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Competências Gerais</label>
+            <textarea name="competenciasGerais" onChange={handleChange} className="w-full bg-white border-none rounded-xl p-3 text-sm h-20" />
+          </div>
+          <div>
+            <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Competências Específicas</label>
+            <textarea name="competenciasEspecificas" onChange={handleChange} className="w-full bg-white border-none rounded-xl p-3 text-sm h-20" />
+          </div>
+        </div>
+      )}
+      
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Conteúdo / Assunto</label>
+        <textarea name="conteudo" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-32" />
+      </div>
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Metodologia (Procedimentos)</label>
+        <textarea name="metodologia" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-32" />
+      </div>
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Avaliação</label>
+        <textarea name="avaliacao" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-24" />
+      </div>
+      <div>
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Atividades para Casa</label>
+        <textarea name="atividadesCasa" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary h-24" />
+      </div>
+      <div className="md:col-span-2">
+        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Materiais Utilizados</label>
+        <input type="text" name="materiais" onChange={handleChange} className="w-full bg-slate-50 border-none rounded-2xl p-4 text-sm focus:ring-2 focus:ring-primary" />
+      </div>
+    </div>
+  );
+
+  if (enviado) {
+    return (
+      <div className="h-[60vh] flex flex-col items-center justify-center text-center">
+        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mb-4 animate-bounce">
+          <CheckCircle size={40} />
+        </div>
+        <h2 className="text-2xl font-black text-slate-800 uppercase italic">Planejamento Enviado!</h2>
+        <p className="text-slate-400 text-sm font-bold uppercase mt-2">A coordenação será notificada para validação.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <button onClick={() => navigate(-1)} className="p-2 bg-white rounded-xl border border-slate-100 text-slate-400">
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic">Planejamento Pedagógico</h1>
-          <p className="text-[10px] font-black text-primary uppercase">{turmaAtual?.nome}</p>
+    <div className="space-y-6 max-w-5xl mx-auto pb-20">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={() => navigate(-1)} className="p-3 bg-white rounded-2xl border border-slate-100 text-slate-400 hover:text-primary transition-all shadow-sm">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h1 className="text-2xl font-black text-slate-800 uppercase tracking-tighter italic leading-none">Novo Planejamento</h1>
+            <p className="text-[10px] font-black text-primary uppercase tracking-widest mt-1">{turmaAtual?.nome} — {user.nivel_ensino}</p>
+          </div>
         </div>
       </div>
 
-      <form onSubmit={handleEnviar} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Configurações do Plano */}
-        <div className="space-y-6">
-          <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-            <h3 className="font-black text-slate-700 uppercase text-xs mb-4 flex items-center gap-2">
-              <ClipboardList size={16} className="text-primary"/> Detalhes do Período
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase ml-1">Mês de Referência</label>
-                <select 
-                  value={mes} 
-                  onChange={(e) => setMes(e.target.value)}
-                  className="w-full border-slate-200 rounded-2xl p-3 text-sm font-bold uppercase"
-                >
-                  <option>Fevereiro</option>
-                  <option>Março</option>
-                  <option>Abril</option>
-                  <option>Maio</option>
-                </select>
-              </div>
-              <div className="p-4 bg-primary/5 rounded-2xl">
-                <p className="text-[9px] font-bold text-primary uppercase leading-tight">
-                  Este plano será revisado pela Coordenação antes de ser liberado para o diário.
-                </p>
-              </div>
+      <form onSubmit={handleSubmit} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+        <div className="p-8 border-b border-slate-50 bg-slate-50/30">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2">
+              <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Título do Plano / Tema da Aula</label>
+              <input 
+                required
+                type="text" 
+                name="titulo"
+                onChange={handleChange}
+                placeholder="Ex: Operações Básicas ou Projeto Carnaval"
+                className="w-full bg-white border-none rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+               <div>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Início</label>
+                 <input required type="date" name="dataInicio" onChange={handleChange} className="w-full bg-white border-none rounded-2xl p-4 text-xs font-bold" />
+               </div>
+               <div>
+                 <label className="block text-[10px] font-black text-slate-400 uppercase mb-2">Fim</label>
+                 <input required type="date" name="dataFim" onChange={handleChange} className="w-full bg-white border-none rounded-2xl p-4 text-xs font-bold" />
+               </div>
             </div>
           </div>
         </div>
 
-        {/* Conteúdo do Plano */}
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <BookOpen size={14} /> Objetivos de Aprendizagem (BNCC)
-              </label>
-              <textarea 
-                rows="4"
-                className="w-full border-slate-100 bg-slate-50 rounded-2xl p-4 text-sm font-medium focus:ring-primary transition-all"
-                placeholder="Descreva as habilidades e competências..."
-                value={objetivos}
-                onChange={(e) => setObjetivos(e.target.value)}
-                required
-              />
-            </div>
+        <div className="p-8">
+          {user.nivel_ensino === 'Infantil' ? renderCamposInfantil() : renderCamposIniciaisEFinais()}
+        </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                <ClipboardList size={14} /> Conteúdos e Metodologia
-              </label>
-              <textarea 
-                rows="6"
-                className="w-full border-slate-100 bg-slate-50 rounded-2xl p-4 text-sm font-medium focus:ring-primary transition-all"
-                placeholder="Quais atividades e conteúdos serão aplicados?"
-                value={conteudo}
-                onChange={(e) => setConteudo(e.target.value)}
-                required
-              />
-            </div>
-
-            <button 
-              type="submit"
-              className="w-full bg-slate-800 text-white py-5 rounded-3xl font-black text-xs uppercase hover:bg-black transition-all shadow-xl shadow-slate-200 flex items-center justify-center gap-3"
-            >
-              <Send size={18} /> Enviar para Coordenação
-            </button>
-          </div>
+        <div className="p-8 bg-slate-50/50 border-t border-slate-100 flex justify-end">
+          <button 
+            type="submit"
+            className="bg-slate-800 text-white px-10 py-4 rounded-2xl font-black text-xs uppercase flex items-center gap-3 hover:bg-primary transition-all shadow-xl shadow-slate-200"
+          >
+            <Send size={18} /> Enviar para Coordenação
+          </button>
         </div>
       </form>
     </div>

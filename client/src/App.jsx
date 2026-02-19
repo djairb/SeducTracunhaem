@@ -24,6 +24,9 @@ import AtaResultados from './pages/AtaResultados';
 import GradeHorarios from './pages/professor/GradeHorarios';
 import GestaoTurmas from './pages/GestaoTurmas';
 import RelatoriosHome from './pages/RelatoriosHome';
+import AcompanhamentoPedagogico from './pages/professor/AcompanhamentoPedagogico';
+import GestaoHorarios from './pages/GestaoHorarios';
+import LancamentoConceitos from './pages/professor/LancamentoConceitos';
 
 // =================================================================
 // 1. GUARDIÃO DE ROTAS SIMPLIFICADO
@@ -150,6 +153,12 @@ function App() {
           </PrivateRoute>
         } />
 
+        <Route path="/gestao-horarios" element={
+          <PrivateRoute allowedRoles={['Master', 'Secretaria']}>
+            <MainLayout><GestaoHorarios /></MainLayout>
+          </PrivateRoute>
+        } />
+
         {/* --- ROTAS DO PROFESSOR --- */}
         <Route path="/portal-professor" element={
           <PrivateRoute allowedRoles={['Professor']}>
@@ -236,6 +245,13 @@ function App() {
 
         <Route path="/professor/frequencia" element={<Navigate to="/portal-professor" />} />
         <Route path="/professor/diario" element={<Navigate to="/portal-professor" />} />
+
+        <Route path="/portal-professor/planejamento/:turmaId" element={<PlanejamentoDocente />} />
+        <Route path="/portal-professor/frequencia/:turmaId" element={<FolhaFrequencia />} />
+
+        <Route path="/portal-professor/acompanhamento/:turmaId" element={<AcompanhamentoPedagogico />} />
+
+        <Route path="/portal-professor/conceitos/:turmaId" element={<LancamentoConceitos />} />
 
         <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
